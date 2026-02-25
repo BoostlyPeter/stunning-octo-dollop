@@ -140,6 +140,93 @@ body.view-table #map-container,body.view-table #compass,body.view-table #minimap
 #table-view .visited-badge{font-size:11px;padding:2px 7px;border-radius:8px}
 #table-view .visited-badge.yes{background:rgba(80,187,78,.15);color:#2a7a2a}
 #table-view .visited-badge.no{background:rgba(0,0,0,.04);color:#8a8a8a}
+
+/* ── Card view ── */
+#card-view{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--pg);z-index:790;display:none;overflow-y:auto;padding:0}
+#card-view.active{display:block}
+body.view-card #map-container,body.view-card #compass,body.view-card #minimap,body.view-card #legend,body.view-card #zoom-ctrl,body.view-card #ship{display:none}
+#card-view .cv-header{display:flex;align-items:center;gap:16px;padding:16px 28px 0;flex-wrap:wrap}
+#card-view .cv-header h2{color:var(--dk);font-size:20px;font-weight:700;white-space:nowrap}
+#card-view .cv-header h2 span{color:var(--pk)}
+#card-view .cv-search{flex:1;max-width:360px;position:relative}
+#card-view .cv-search input{width:100%;padding:8px 14px 8px 36px;border-radius:8px;border:1px solid rgba(0,62,35,.15);background:#fff;color:var(--dk);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;font-family:inherit}
+#card-view .cv-search input:focus{border-color:var(--pk);box-shadow:0 0 0 3px rgba(80,187,78,.15)}
+#card-view .cv-search input::placeholder{color:#8aaa8a}
+#card-view .cv-search .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#8aaa8a;font-size:14px;pointer-events:none}
+#card-view .cv-count{color:#5a7a5a;font-size:13px;white-space:nowrap;margin-left:auto}
+
+/* Buckets */
+#bucket-area{padding:12px 28px 0;display:flex;flex-direction:column;gap:10px}
+.bucket{background:#fff;border:2px dashed rgba(0,62,35,.15);border-radius:12px;width:100%;transition:border-color .2s,background .2s,box-shadow .2s}
+.bucket.drag-over{border-color:var(--pk);background:rgba(80,187,78,.06);box-shadow:0 0 0 3px rgba(80,187,78,.12)}
+.bucket .bucket-header{display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:default;border-bottom:1px solid rgba(0,62,35,.06)}
+.bucket .bucket-color{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.bucket .bucket-name{font-size:14px;font-weight:600;color:var(--dk);flex:1;border:none;background:transparent;outline:none;font-family:inherit;cursor:text;padding:2px 4px;border-radius:4px}
+.bucket .bucket-name:focus{background:rgba(80,187,78,.08);box-shadow:0 0 0 2px rgba(80,187,78,.2)}
+.bucket .bucket-count{font-size:11px;color:#8aaa8a}
+.bucket .bucket-del{width:22px;height:22px;border:none;background:transparent;color:#aaa;font-size:14px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.bucket .bucket-del:hover{background:rgba(200,50,50,.08);color:#c44}
+.bucket .bucket-cards{padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;min-height:40px}
+.bucket .bucket-empty{grid-column:1/-1;text-align:center;color:#bbb;font-size:12px;padding:8px 0}
+#addBucketBtn{padding:8px 16px;border:2px dashed rgba(0,62,35,.12);border-radius:12px;background:transparent;color:var(--pk);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit;min-height:44px;display:flex;align-items:center;justify-content:center;width:fit-content}
+#addBucketBtn:hover{border-color:var(--pk);background:rgba(80,187,78,.04)}
+
+/* Card grid */
+#card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px 28px 28px}
+#card-grid.has-search-results{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.site-card{background:#fff;border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;border:1px solid rgba(0,62,35,.08);position:relative;display:flex;flex-direction:column}
+.site-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,40,20,.1)}
+.site-card.dragging{opacity:.4;transform:scale(.96)}
+.site-card .card-stripe{height:6px;flex-shrink:0}
+.site-card .card-stripe.hub{background:linear-gradient(90deg,var(--gold),#e8c060)}
+.site-card .card-stripe.satellite{background:linear-gradient(90deg,var(--pk),#70d870)}
+.site-card .card-stripe.dept{background:linear-gradient(90deg,#4a9ab8,#6abcd8)}
+.site-card .card-stripe.project{background:linear-gradient(90deg,#a84a88,#c870a8)}
+.site-card .card-body{padding:14px 16px 12px;flex:1;display:flex;flex-direction:column}
+.site-card .card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.site-card .card-initials{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.5px}
+.site-card .card-initials.hub{background:linear-gradient(135deg,#b8922a,var(--gold))}
+.site-card .card-initials.satellite{background:linear-gradient(135deg,#38a838,var(--pk))}
+.site-card .card-initials.dept{background:linear-gradient(135deg,#3a8aa8,#4a9ab8)}
+.site-card .card-initials.project{background:linear-gradient(135deg,#8a3a68,#a84a88)}
+.site-card .card-info{flex:1;min-width:0}
+.site-card .card-name{font-size:14px;font-weight:700;color:var(--dk);line-height:1.3;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site-card .card-template{font-size:11px;color:#5a7a5a}
+.site-card .card-star{position:absolute;top:12px;right:12px;width:28px;height:28px;border:none;background:transparent;cursor:pointer;font-size:16px;color:#ccc;transition:color .15s;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.site-card .card-star:hover{color:var(--gold)}
+.site-card .card-star.starred{color:var(--gold)}
+.site-card .card-stats{display:flex;gap:14px;padding:8px 0;border-top:1px solid rgba(0,62,35,.06)}
+.site-card .card-stat{display:flex;align-items:center;gap:4px;font-size:12px;color:#3a6a3a;position:relative}
+.site-card .card-stat .stat-icon{font-size:13px;color:#8aaa8a}
+.site-card .card-stat .stat-val{font-weight:700;font-variant-numeric:tabular-nums}
+.site-card .card-stat.has-tooltip{cursor:default}
+.site-card .card-stat .lib-tooltip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border:1px solid rgba(0,62,35,.12);border-radius:8px;padding:8px 12px;min-width:180px;max-width:260px;box-shadow:0 4px 16px rgba(0,40,20,.12);z-index:20;font-size:11px;color:#3a5a3a;white-space:normal}
+.site-card .card-stat.has-tooltip:hover .lib-tooltip{display:block}
+.site-card .card-stat .lib-tooltip .lt-item{display:flex;align-items:center;gap:5px;padding:2px 0}
+.site-card .card-stat .lib-tooltip .lt-dot{width:5px;height:5px;border-radius:50%;background:var(--pk);flex-shrink:0;opacity:.5}
+.site-card .card-stat .lib-tooltip .lt-count{margin-left:auto;color:#8aaa8a;font-size:10px;flex-shrink:0}
+.site-card .card-stat .lib-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:rgba(0,62,35,.12)}
+.site-card .card-color-bar{height:6px;flex-shrink:0;display:none}
+.site-card.has-custom-color .card-color-bar{display:block}
+.site-card.has-custom-color .card-stripe{display:none}
+.site-card .card-activity{position:absolute;bottom:14px;right:14px;width:10px;height:10px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.site-card .card-type-badge{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;margin-top:1px}
+.site-card .card-type-badge.hub{background:rgba(212,168,67,.12);color:#8a6a20}
+.site-card .card-type-badge.satellite{background:rgba(80,187,78,.1);color:#2a7a2a}
+.site-card .card-type-badge.dept{background:rgba(60,130,160,.08);color:#2a6a80}
+.site-card .card-type-badge.project{background:rgba(160,70,110,.08);color:#8a3a5a}
+.card-no-results{grid-column:1/-1;text-align:center;padding:40px 20px;color:#8aaa8a;font-size:15px}
+
+/* Right-click color context menu */
+#card-ctx-menu{position:fixed;z-index:9999;background:#fff;border:1px solid rgba(0,62,35,.12);border-radius:10px;padding:8px;box-shadow:0 6px 24px rgba(0,40,20,.15);display:none;min-width:160px}
+#card-ctx-menu.open{display:block}
+#card-ctx-menu .ctx-label{font-size:11px;color:#8aaa8a;padding:2px 8px 6px;font-weight:600;letter-spacing:.3px}
+#card-ctx-menu .ctx-colors{display:flex;flex-wrap:wrap;gap:6px;padding:4px 6px}
+#card-ctx-menu .ctx-swatch{width:24px;height:24px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:transform .1s,border-color .1s}
+#card-ctx-menu .ctx-swatch:hover{transform:scale(1.15);border-color:var(--dk)}
+#card-ctx-menu .ctx-swatch.active{border-color:var(--dk);box-shadow:0 0 0 2px rgba(0,62,35,.15)}
+#card-ctx-menu .ctx-clear{width:100%;margin-top:4px;padding:5px 8px;border:none;background:rgba(0,0,0,.03);border-radius:6px;font-size:11px;color:#5a7a5a;cursor:pointer;font-family:inherit;transition:background .12s}
+#card-ctx-menu .ctx-clear:hover{background:rgba(0,0,0,.06)}
 </style>
 </head>
 <body>
@@ -223,8 +310,33 @@ body.view-table #map-container,body.view-table #compass,body.view-table #minimap
   <span class="save-indicator" id="saveIndicator">✓ Sparad</span>
   <div class="tb-sep"></div>
   <span class="tb-label">Vy:</span>
-  <button id="btnMapView" class="active" title="Kartvy">🗺️ Karta</button>
-  <button id="btnTableView" title="Tabellvy">📋 Tabell</button>
+  <button id="btnCardView" class="active" title="Kortvy">Kort</button>
+  <button id="btnMapView" title="Kartvy">Karta</button>
+  <button id="btnTableView" title="Tabellvy">Tabell</button>
+</div>
+
+<!-- Card view -->
+<div id="card-view">
+  <div class="cv-header">
+    <h2>Alla <span>webbplatser</span></h2>
+    <div class="cv-search">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" id="cardSearch" placeholder="S&ouml;k webbplatser...">
+    </div>
+    <span class="cv-count" id="card-count"></span>
+  </div>
+  <div id="bucket-area">
+    <div id="bucket-list"></div>
+    <button id="addBucketBtn" title="L&auml;gg till kategori">+ Ny kategori</button>
+  </div>
+  <div id="card-grid"></div>
+</div>
+
+<!-- Card context menu -->
+<div id="card-ctx-menu">
+  <div class="ctx-label">F&auml;rgmarkera</div>
+  <div class="ctx-colors" id="ctx-colors"></div>
+  <button class="ctx-clear" id="ctx-clear">Ta bort f&auml;rg</button>
 </div>
 
 <!-- Detail panel -->
@@ -416,6 +528,15 @@ const islands = [
   {id:'aktuarie',name:'Aktuarieavdelningen',emoji:'\u{1F4D0}',type:'dept',group:'standalone',hubId:null,x:-480,y:-150,rx:60,ry:37,terrain:'snow',docs:156,
    libs:[{n:'Ber\u00e4kningsmodeller',i:'\u{1F4D0}',c:68},{n:'Rapporter',i:'\u{1F4CA}',c:48},{n:'Antaganden',i:'\u{1F4CB}',c:40}],visited:true,activity:'high',desc:'Koncerngemensam aktuarieavdelning med ber\u00e4kningsmodeller.'}
 ];
+
+// Assign user counts per site (seeded for consistency)
+islands.forEach((isl, i) => {
+  const rng = lcg(i * 31 + 77);
+  if (isl.type === 'hub') isl.users = 20 + Math.floor(rng() * 25);
+  else if (isl.type === 'satellite') isl.users = 5 + Math.floor(rng() * 15);
+  else if (isl.type === 'project') isl.users = 4 + Math.floor(rng() * 8);
+  else isl.users = 3 + Math.floor(rng() * 12);
+});
 
 // ========== STATE ==========
 let scale = 0.55, panX = 0, panY = 0;
@@ -2859,7 +2980,7 @@ const tableColumns = [
 ];
 let tableSortCol = 'name';
 let tableSortAsc = true;
-let currentView = 'map'; // 'map' or 'table'
+let currentView = 'card'; // 'card' | 'map' | 'table'
 
 function buildTableHead() {
   const tr = document.getElementById('table-head');
@@ -2954,36 +3075,419 @@ function renderTableBody() {
   document.getElementById('table-count').textContent = sorted.length + ' webbplatser';
 }
 
+// ========== CARD VIEW: BUCKETS ==========
+let cardBuckets = []; // [{id, name, color, siteIds:[]}]
+const BUCKET_COLORS = ['#50bb4e','#4a9ab8','#d4a843','#a84a88','#e07040','#6a8aaa','#aa6a3a','#7a5ab8'];
+let cardStarred = new Set();
+let siteColors = {}; // {siteId: '#color'}
+const CTX_SWATCHES = ['#50bb4e','#d4a843','#4a9ab8','#a84a88','#e07040','#6a8aaa','#c94040','#7a5ab8','#2aaa5a','#aa6a3a','#3a8aa8','#e0a030'];
+
+function loadBuckets() {
+  try {
+    const raw = localStorage.getItem('dina-skargard-buckets');
+    if (raw) cardBuckets = JSON.parse(raw);
+  } catch(e) {}
+  try {
+    const raw = localStorage.getItem('dina-skargard-starred');
+    if (raw) cardStarred = new Set(JSON.parse(raw));
+  } catch(e) {}
+  try {
+    const raw = localStorage.getItem('dina-skargard-sitecolors');
+    if (raw) siteColors = JSON.parse(raw);
+  } catch(e) {}
+}
+function saveBuckets() {
+  localStorage.setItem('dina-skargard-buckets', JSON.stringify(cardBuckets));
+}
+function saveStarred() {
+  localStorage.setItem('dina-skargard-starred', JSON.stringify([...cardStarred]));
+}
+
+function saveSiteColors() {
+  localStorage.setItem('dina-skargard-sitecolors', JSON.stringify(siteColors));
+}
+
+// ========== CONTEXT MENU ==========
+let ctxTargetSiteId = null;
+function showCardContextMenu(x, y, siteId) {
+  ctxTargetSiteId = siteId;
+  const menu = document.getElementById('card-ctx-menu');
+  const colorsDiv = document.getElementById('ctx-colors');
+  colorsDiv.innerHTML = '';
+  CTX_SWATCHES.forEach(color => {
+    const swatch = document.createElement('div');
+    swatch.className = 'ctx-swatch' + (siteColors[siteId] === color ? ' active' : '');
+    swatch.style.background = color;
+    swatch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      siteColors[siteId] = color;
+      saveSiteColors();
+      menu.classList.remove('open');
+      renderBuckets();
+      renderCardGrid();
+    });
+    colorsDiv.appendChild(swatch);
+  });
+  // Position menu
+  menu.style.left = Math.min(x, window.innerWidth - 180) + 'px';
+  menu.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+  menu.classList.add('open');
+}
+document.getElementById('ctx-clear').addEventListener('click', () => {
+  if (ctxTargetSiteId) {
+    delete siteColors[ctxTargetSiteId];
+    saveSiteColors();
+    document.getElementById('card-ctx-menu').classList.remove('open');
+    renderBuckets();
+    renderCardGrid();
+  }
+});
+// Close context menu on click elsewhere
+document.addEventListener('click', () => {
+  document.getElementById('card-ctx-menu').classList.remove('open');
+});
+
+function addBucket() {
+  const id = 'b' + Date.now();
+  const color = BUCKET_COLORS[cardBuckets.length % BUCKET_COLORS.length];
+  cardBuckets.push({id, name:'Ny kategori', color, siteIds:[]});
+  saveBuckets();
+  renderBuckets();
+  renderCardGrid();
+}
+function deleteBucket(bid) {
+  cardBuckets = cardBuckets.filter(b => b.id !== bid);
+  saveBuckets();
+  renderBuckets();
+  renderCardGrid();
+}
+function renameBucket(bid, name) {
+  const b = cardBuckets.find(b => b.id === bid);
+  if (b) { b.name = name; saveBuckets(); }
+}
+
+function bucketForSite(siteId) {
+  return cardBuckets.find(b => b.siteIds.includes(siteId));
+}
+function removeSiteFromBuckets(siteId) {
+  cardBuckets.forEach(b => { b.siteIds = b.siteIds.filter(s => s !== siteId); });
+}
+
+function renderBuckets() {
+  const list = document.getElementById('bucket-list');
+  list.innerHTML = '';
+  cardBuckets.forEach(bucket => {
+    const el = document.createElement('div');
+    el.className = 'bucket';
+    el.dataset.bid = bucket.id;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'bucket-header';
+    const dot = document.createElement('div');
+    dot.className = 'bucket-color';
+    dot.style.background = bucket.color;
+    header.appendChild(dot);
+    const nameInput = document.createElement('input');
+    nameInput.className = 'bucket-name';
+    nameInput.value = bucket.name;
+    nameInput.addEventListener('change', () => renameBucket(bucket.id, nameInput.value));
+    header.appendChild(nameInput);
+    const countSpan = document.createElement('span');
+    countSpan.className = 'bucket-count';
+    countSpan.textContent = bucket.siteIds.length + ' st';
+    header.appendChild(countSpan);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'bucket-del';
+    delBtn.textContent = '\u00d7';
+    delBtn.title = 'Ta bort kategori';
+    delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteBucket(bucket.id); });
+    header.appendChild(delBtn);
+    el.appendChild(header);
+
+    // Cards area (full-size cards)
+    const cardsArea = document.createElement('div');
+    cardsArea.className = 'bucket-cards';
+    const actColors = {high:'#50bb4e', medium:'#e8b020', low:'#bbb'};
+    const typeLabels = {hub:'Hub', satellite:'Satellit', dept:'Avdelning', project:'Projekt'};
+    if (bucket.siteIds.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'bucket-empty';
+      empty.textContent = 'Dra kort hit...';
+      cardsArea.appendChild(empty);
+    }
+    bucket.siteIds.forEach(sid => {
+      const isl = islands.find(i => i.id === sid);
+      if (!isl) return;
+      const card = buildSiteCard(isl, actColors, typeLabels);
+      cardsArea.appendChild(card);
+    });
+    el.appendChild(cardsArea);
+
+    // Drop zone
+    el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragenter', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', (e) => {
+      if (!el.contains(e.relatedTarget)) el.classList.remove('drag-over');
+    });
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      const sid = e.dataTransfer.getData('text/plain');
+      if (sid) {
+        removeSiteFromBuckets(sid);
+        bucket.siteIds.push(sid);
+        saveBuckets();
+        renderBuckets();
+        renderCardGrid();
+      }
+    });
+
+    list.appendChild(el);
+  });
+}
+
+function typeColor(type) {
+  return type === 'hub' ? '#d4a843' : type === 'satellite' ? '#50bb4e' : type === 'project' ? '#a84a88' : '#4a9ab8';
+}
+
+function renderCardGrid() {
+  const grid = document.getElementById('card-grid');
+  grid.innerHTML = '';
+  const query = (document.getElementById('cardSearch').value || '').toLowerCase().trim();
+  const actColors = {high:'#50bb4e', medium:'#e8b020', low:'#bbb'};
+  const typeLabels = {hub:'Hub', satellite:'Satellit', dept:'Avdelning', project:'Projekt'};
+
+  // Sites NOT in any bucket
+  const bucketed = new Set();
+  cardBuckets.forEach(b => b.siteIds.forEach(s => bucketed.add(s)));
+
+  let list = islands.filter(isl => !bucketed.has(isl.id));
+
+  // Search filter
+  if (query.length >= 2) {
+    list = list.filter(isl =>
+      isl.name.toLowerCase().includes(query) ||
+      isl.id.includes(query) ||
+      (isl.type && isl.type.includes(query)) ||
+      (isl.group && isl.group.includes(query)) ||
+      (isl.desc && isl.desc.toLowerCase().includes(query))
+    );
+  }
+
+  // Sort: starred first, then hubs, then alpha
+  list.sort((a, b) => {
+    const sa = cardStarred.has(a.id) ? 0 : 1;
+    const sb = cardStarred.has(b.id) ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    const ta = a.type === 'hub' ? 0 : 1;
+    const tb = b.type === 'hub' ? 0 : 1;
+    if (ta !== tb) return ta - tb;
+    return a.name.localeCompare(b.name, 'sv');
+  });
+
+  if (list.length === 0 && query.length >= 2) {
+    const noRes = document.createElement('div');
+    noRes.className = 'card-no-results';
+    noRes.textContent = 'Inga webbplatser matchar "' + query + '"';
+    grid.appendChild(noRes);
+  }
+
+  list.forEach(isl => {
+    const card = buildSiteCard(isl, actColors, typeLabels);
+    grid.appendChild(card);
+  });
+
+  const total = islands.length;
+  const showing = list.length + bucketed.size;
+  document.getElementById('card-count').textContent = showing + ' av ' + total + ' webbplatser';
+}
+
+function buildSiteCard(isl, actColors, typeLabels) {
+  const card = document.createElement('div');
+  const customColor = siteColors[isl.id];
+  card.className = 'site-card' + (customColor ? ' has-custom-color' : '');
+  card.draggable = true;
+  card.dataset.id = isl.id;
+
+  // Custom color bar (shown if user assigned a color)
+  const colorBar = document.createElement('div');
+  colorBar.className = 'card-color-bar';
+  if (customColor) colorBar.style.background = customColor;
+  card.appendChild(colorBar);
+
+  // Type stripe (hidden when custom color active)
+  const stripe = document.createElement('div');
+  stripe.className = 'card-stripe ' + isl.type;
+  card.appendChild(stripe);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'card-body';
+
+  // Top: initials + info
+  const top = document.createElement('div');
+  top.className = 'card-top';
+  const initials = document.createElement('div');
+  initials.className = 'card-initials ' + isl.type;
+  const parts = isl.name.split(/[\s&]+/);
+  initials.textContent = parts.length >= 2
+    ? (parts[0][0] + parts[1][0]).toUpperCase()
+    : isl.name.substring(0, 2).toUpperCase();
+  top.appendChild(initials);
+
+  const info = document.createElement('div');
+  info.className = 'card-info';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'card-name';
+  nameEl.textContent = isl.name;
+  info.appendChild(nameEl);
+  const tplEl = document.createElement('div');
+  tplEl.className = 'card-template';
+  tplEl.textContent = COMM_SITES.has(isl.id) ? 'Kommunikationswebbplats' : 'Gruppwebbplats';
+  info.appendChild(tplEl);
+  const badge = document.createElement('span');
+  badge.className = 'card-type-badge ' + isl.type;
+  badge.textContent = typeLabels[isl.type] || isl.type;
+  info.appendChild(badge);
+  top.appendChild(info);
+  body.appendChild(top);
+
+  // Star
+  const star = document.createElement('button');
+  star.className = 'card-star' + (cardStarred.has(isl.id) ? ' starred' : '');
+  star.textContent = cardStarred.has(isl.id) ? '\u2605' : '\u2606';
+  star.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (cardStarred.has(isl.id)) { cardStarred.delete(isl.id); }
+    else { cardStarred.add(isl.id); }
+    saveStarred();
+    renderBuckets();
+    renderCardGrid();
+  });
+  card.appendChild(star);
+
+  // Stats row
+  const stats = document.createElement('div');
+  stats.className = 'card-stats';
+
+  // Docs stat
+  const docStat = document.createElement('div');
+  docStat.className = 'card-stat';
+  docStat.innerHTML = '<span class="stat-icon">\u{1F4C4}</span><span class="stat-val">' + isl.docs + '</span> dok';
+  stats.appendChild(docStat);
+
+  // Users stat
+  const usrStat = document.createElement('div');
+  usrStat.className = 'card-stat';
+  usrStat.innerHTML = '<span class="stat-icon">\u{1F465}</span><span class="stat-val">' + (isl.users || 0) + '</span> anv';
+  stats.appendChild(usrStat);
+
+  // Libs stat with hover tooltip
+  const libStat = document.createElement('div');
+  libStat.className = 'card-stat has-tooltip';
+  libStat.innerHTML = '<span class="stat-icon">\u{1F4C1}</span><span class="stat-val">' + isl.libs.length + '</span> bib';
+
+  const tooltip = document.createElement('div');
+  tooltip.className = 'lib-tooltip';
+  isl.libs.forEach(lib => {
+    const item = document.createElement('div');
+    item.className = 'lt-item';
+    item.innerHTML = '<span class="lt-dot"></span>' + lib.n + '<span class="lt-count">' + lib.c + ' dok</span>';
+    tooltip.appendChild(item);
+  });
+  libStat.appendChild(tooltip);
+  stats.appendChild(libStat);
+
+  body.appendChild(stats);
+  card.appendChild(body);
+
+  // Activity dot
+  const actDot = document.createElement('div');
+  actDot.className = 'card-activity';
+  actDot.style.background = actColors[isl.activity] || '#bbb';
+  actDot.title = 'Aktivitet: ' + (isl.activity === 'high' ? 'H\u00f6g' : isl.activity === 'medium' ? 'Medel' : 'L\u00e5g');
+  card.appendChild(actDot);
+
+  // Click
+  card.addEventListener('click', () => selectIsland(isl));
+
+  // Right-click: show color menu
+  card.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showCardContextMenu(e.clientX, e.clientY, isl.id);
+  });
+
+  // Drag
+  card.addEventListener('dragstart', (e) => {
+    e.dataTransfer.setData('text/plain', isl.id);
+    card.classList.add('dragging');
+  });
+  card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+  return card;
+}
+
+// ========== VIEW SWITCHING ==========
 function switchView(view) {
   currentView = view;
-  const tableView = document.getElementById('table-view');
-  const btnMap = document.getElementById('btnMapView');
-  const btnTable = document.getElementById('btnTableView');
-  if (view === 'table') {
+  document.body.classList.remove('view-table', 'view-card');
+  document.getElementById('table-view').classList.remove('active');
+  document.getElementById('card-view').classList.remove('active');
+  ['btnCardView','btnMapView','btnTableView'].forEach(id =>
+    document.getElementById(id).classList.remove('active'));
+
+  if (view === 'card') {
+    document.body.classList.add('view-card');
+    document.getElementById('card-view').classList.add('active');
+    document.getElementById('btnCardView').classList.add('active');
+    renderBuckets();
+    renderCardGrid();
+  } else if (view === 'table') {
     document.body.classList.add('view-table');
-    tableView.classList.add('active');
-    btnTable.classList.add('active');
-    btnMap.classList.remove('active');
+    document.getElementById('table-view').classList.add('active');
+    document.getElementById('btnTableView').classList.add('active');
     buildTableHead();
     renderTableBody();
   } else {
-    document.body.classList.remove('view-table');
-    tableView.classList.remove('active');
-    btnMap.classList.add('active');
-    btnTable.classList.remove('active');
+    document.getElementById('btnMapView').classList.add('active');
   }
 }
 
+document.getElementById('btnCardView').addEventListener('click', () => switchView('card'));
 document.getElementById('btnMapView').addEventListener('click', () => switchView('map'));
 document.getElementById('btnTableView').addEventListener('click', () => switchView('table'));
+
+// Card search
+document.getElementById('cardSearch').addEventListener('input', () => renderCardGrid());
+
+// Add bucket button
+document.getElementById('addBucketBtn').addEventListener('click', () => addBucket());
+
+// Card grid drop zone (remove from bucket)
+document.getElementById('card-grid').addEventListener('dragover', (e) => e.preventDefault());
+document.getElementById('card-grid').addEventListener('drop', (e) => {
+  e.preventDefault();
+  const sid = e.dataTransfer.getData('text/plain');
+  if (sid) {
+    removeSiteFromBuckets(sid);
+    saveBuckets();
+    renderBuckets();
+    renderCardGrid();
+  }
+});
 
 // ========== INIT ==========
 // Load saved layout before building map
 const hadSaved = loadLayout();
+loadBuckets();
 buildMap();
 addAnimations();
 updateMinimap();
 if (hadSaved) showToast('Din sparade layout har laddats');
+
+// Default to card view
+switchView('card');
 
 // Handle resize
 window.addEventListener('resize', () => {
