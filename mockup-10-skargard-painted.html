@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="mockup-shared.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--dk:#003e23;--pk:#50bb4e;--pg:#edf6ed;--gold:#d4a843;--ocean1:#071e32;--ocean2:#0c3352;--ocean3:#124d72;--panelw:380px}
+:root{--dk:#003e23;--pk:#50bb4e;--pg:#edf6ed;--gold:#d4a843;--ocean1:#1a7868;--ocean2:#228870;--ocean3:#2a9878;--panelw:380px}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:var(--ocean1)}
 #topbar{position:fixed;top:0;left:0;right:0;height:52px;background:linear-gradient(135deg,var(--dk),#00562f);display:flex;align-items:center;padding:0 18px;z-index:900;box-shadow:0 2px 12px rgba(0,0,0,.5);gap:14px}
 #topbar .logo{font-size:20px;font-weight:700;color:#fff;white-space:nowrap;letter-spacing:.5px}
@@ -19,7 +19,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-u
 #topbar .search-wrap input:focus{background:rgba(255,255,255,.18);border-color:var(--pk)}
 #topbar .search-wrap .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.5);font-size:14px;pointer-events:none}
 #topbar .user-avatar{width:34px;height:34px;border-radius:50%;background:var(--pk);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;cursor:pointer}
-#map-container{position:fixed;top:52px;left:0;right:0;bottom:0;overflow:hidden;cursor:grab;background:radial-gradient(ellipse at 50% 50%,#164e6a,var(--ocean2) 45%,var(--ocean1) 85%)}
+#map-container{position:fixed;top:52px;left:0;right:0;bottom:0;overflow:hidden;cursor:grab;background:radial-gradient(ellipse at 50% 50%,#3aaa90,#2a8a78 45%,#1a7868 85%)}
 #map-container.grabbing{cursor:grabbing}
 #map-svg{position:absolute;top:0;left:0;width:100%;height:100%;touch-action:none}
 
@@ -28,48 +28,48 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-u
 #compass svg{width:100%;height:100%}
 
 /* Minimap */
-#minimap{position:fixed;top:64px;right:14px;width:200px;height:150px;background:rgba(10,42,74,.85);border:2px solid rgba(255,255,255,.2);border-radius:10px;z-index:800;overflow:hidden;cursor:pointer}
+#minimap{position:fixed;top:64px;right:14px;width:200px;height:150px;background:rgba(20,100,80,.75);border:2px solid rgba(80,187,78,.4);border-radius:10px;z-index:800;overflow:hidden;cursor:pointer}
 #minimap canvas{width:100%;height:100%}
 #minimap .viewport-rect{position:absolute;border:1.5px solid var(--pk);pointer-events:none;border-radius:2px}
 
 /* Legend */
-#legend{position:fixed;bottom:14px;left:14px;background:rgba(0,30,15,.88);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:14px 16px;z-index:800;color:#fff;font-size:12px;min-width:170px;backdrop-filter:blur(6px)}
-#legend h4{font-size:13px;margin-bottom:8px;color:var(--gold);letter-spacing:.5px}
+#legend{position:fixed;bottom:14px;left:14px;background:rgba(240,250,240,.92);border:1px solid rgba(80,187,78,.35);border-radius:12px;padding:14px 16px;z-index:800;color:var(--dk);font-size:12px;min-width:170px;backdrop-filter:blur(6px);box-shadow:0 2px 10px rgba(0,40,20,.12)}
+#legend h4{font-size:13px;margin-bottom:8px;color:#8a6a20;letter-spacing:.5px}
 #legend .leg-item{display:flex;align-items:center;gap:8px;margin-bottom:5px}
 #legend .leg-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
 #legend .leg-line{width:20px;height:0;border-top:2.5px dashed rgba(180,140,80,.7);flex-shrink:0}
 
 /* Zoom controls */
 #zoom-ctrl{position:fixed;bottom:14px;right:14px;display:flex;flex-direction:column;gap:4px;z-index:800}
-#zoom-ctrl button{width:40px;height:40px;border:1px solid rgba(255,255,255,.2);background:rgba(0,30,15,.8);color:#fff;font-size:20px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:all .15s}
-#zoom-ctrl button:hover{background:rgba(80,187,78,.3);border-color:var(--pk)}
+#zoom-ctrl button{width:40px;height:40px;border:1px solid rgba(80,187,78,.35);background:rgba(240,250,240,.9);color:var(--dk);font-size:20px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:all .15s;box-shadow:0 2px 6px rgba(0,40,20,.1)}
+#zoom-ctrl button:hover{background:rgba(80,187,78,.2);border-color:var(--pk)}
 
 /* Detail panel */
-#detail-panel{position:fixed;top:52px;right:0;bottom:0;width:var(--panelw);background:linear-gradient(180deg,rgba(0,40,20,.97),rgba(0,30,15,.97));border-left:2px solid rgba(80,187,78,.25);z-index:850;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow-y:auto;color:#fff;backdrop-filter:blur(10px)}
+#detail-panel{position:fixed;top:52px;right:0;bottom:0;width:var(--panelw);background:linear-gradient(180deg,#f5faf5 0%,#edf6ed 100%);border-left:2px solid var(--pk);z-index:850;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow-y:auto;color:var(--dk);backdrop-filter:blur(10px)}
 #detail-panel.open{transform:translateX(0)}
-#detail-panel .dp-close{position:absolute;top:12px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-#detail-panel .dp-close:hover{background:rgba(255,255,255,.1)}
-#detail-panel .dp-header{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+#detail-panel .dp-close{position:absolute;top:12px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(0,62,35,.15);background:transparent;color:var(--dk);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#detail-panel .dp-close:hover{background:rgba(0,62,35,.08)}
+#detail-panel .dp-header{padding:24px 20px 16px;border-bottom:1px solid rgba(0,62,35,.1)}
 #detail-panel .dp-emoji{font-size:40px;margin-bottom:8px}
 #detail-panel .dp-name{font-size:22px;font-weight:700;margin-bottom:4px}
-#detail-panel .dp-type{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);background:rgba(212,168,67,.15);display:inline-block;padding:2px 10px;border-radius:20px;margin-bottom:4px}
-#detail-panel .dp-terrain{font-size:11px;color:rgba(255,255,255,.5);margin-top:4px}
-#detail-panel .dp-desc{padding:16px 20px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;border-bottom:1px solid rgba(255,255,255,.1)}
-#detail-panel .dp-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+#detail-panel .dp-type{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#fff;background:var(--pk);display:inline-block;padding:2px 10px;border-radius:20px;margin-bottom:4px}
+#detail-panel .dp-terrain{font-size:11px;color:#5a7a5a;margin-top:4px}
+#detail-panel .dp-desc{padding:16px 20px;font-size:13px;color:#3a5a3a;line-height:1.5;border-bottom:1px solid rgba(0,62,35,.1)}
+#detail-panel .dp-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px 20px;border-bottom:1px solid rgba(0,62,35,.1)}
 #detail-panel .dp-stat{text-align:center}
-#detail-panel .dp-stat .val{font-size:22px;font-weight:700;color:var(--pk)}
-#detail-panel .dp-stat .lbl{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
-#detail-panel .dp-libs{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
-#detail-panel .dp-libs h4{font-size:13px;margin-bottom:10px;color:var(--gold)}
+#detail-panel .dp-stat .val{font-size:22px;font-weight:700;color:var(--dk)}
+#detail-panel .dp-stat .lbl{font-size:11px;color:#5a7a5a;margin-top:2px}
+#detail-panel .dp-libs{padding:16px 20px;border-bottom:1px solid rgba(0,62,35,.1)}
+#detail-panel .dp-libs h4{font-size:13px;margin-bottom:10px;color:var(--dk)}
 #detail-panel .dp-lib{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}
-#detail-panel .dp-lib .lib-icon{width:28px;height:28px;border-radius:6px;background:rgba(80,187,78,.15);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-#detail-panel .dp-lib .lib-count{margin-left:auto;color:rgba(255,255,255,.4);font-size:12px}
+#detail-panel .dp-lib .lib-icon{width:28px;height:28px;border-radius:6px;background:rgba(80,187,78,.12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+#detail-panel .dp-lib .lib-count{margin-left:auto;color:#5a7a5a;font-size:12px}
 #detail-panel .dp-actions{padding:16px 20px;display:flex;flex-direction:column;gap:8px}
 #detail-panel .dp-actions button{padding:10px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px;justify-content:center}
 #detail-panel .dp-actions .btn-primary{background:var(--pk);color:#fff}
 #detail-panel .dp-actions .btn-primary:hover{background:#45a843}
-#detail-panel .dp-actions .btn-secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15)}
-#detail-panel .dp-actions .btn-secondary:hover{background:rgba(255,255,255,.18)}
+#detail-panel .dp-actions .btn-secondary{background:#fff;color:var(--dk);border:1px solid rgba(0,62,35,.2)}
+#detail-panel .dp-actions .btn-secondary:hover{background:rgba(0,62,35,.05)}
 
 /* Ship */
 #ship{position:fixed;width:32px;height:32px;z-index:700;pointer-events:none;opacity:0;transition:opacity .3s}
@@ -77,7 +77,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-u
 #ship svg{width:100%;height:100%}
 
 /* Toast */
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(30px);background:rgba(0,40,20,.95);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;z-index:999;border:1px solid var(--pk);transition:all .3s;white-space:nowrap}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(30px);background:rgba(255,255,255,.95);color:var(--dk);padding:10px 22px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;z-index:999;border:1px solid var(--pk);transition:all .3s;white-space:nowrap;box-shadow:0 2px 12px rgba(0,40,20,.15)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Wave animation for water texture */
@@ -88,12 +88,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-u
 @keyframes pulse{0%,100%{r:4;opacity:1}50%{r:7;opacity:.6}}
 
 /* ── Toolbar (edit mode / layout) ── */
-#toolbar{position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:810;display:flex;gap:6px;padding:6px 10px;background:rgba(0,30,15,.9);border:1px solid rgba(255,255,255,.15);border-radius:10px;backdrop-filter:blur(8px);font-size:12px;color:#fff;align-items:center;transition:all .3s}
-#toolbar .tb-label{color:rgba(255,255,255,.5);margin-right:2px;white-space:nowrap}
-#toolbar button{padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
-#toolbar button:hover{background:rgba(255,255,255,.18)}
-#toolbar button.active{background:var(--pk);color:#003e23;border-color:var(--pk);font-weight:600}
-#toolbar .tb-sep{width:1px;height:18px;background:rgba(255,255,255,.15);margin:0 4px}
+#toolbar{position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:810;display:flex;gap:6px;padding:6px 10px;background:rgba(240,250,240,.92);border:1px solid rgba(80,187,78,.35);border-radius:10px;backdrop-filter:blur(8px);font-size:12px;color:var(--dk);align-items:center;transition:all .3s;box-shadow:0 2px 10px rgba(0,40,20,.1)}
+#toolbar .tb-label{color:rgba(0,62,35,.5);margin-right:2px;white-space:nowrap}
+#toolbar button{padding:5px 12px;border-radius:6px;border:1px solid rgba(0,62,35,.15);background:rgba(0,62,35,.06);color:var(--dk);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+#toolbar button:hover{background:rgba(80,187,78,.15)}
+#toolbar button.active{background:var(--pk);color:#fff;border-color:var(--pk);font-weight:600}
+#toolbar .tb-sep{width:1px;height:18px;background:rgba(0,62,35,.12);margin:0 4px}
 #toolbar .save-indicator{font-size:11px;color:var(--pk);opacity:0;transition:opacity .3s;white-space:nowrap}
 #toolbar .save-indicator.show{opacity:1}
 
@@ -109,6 +109,37 @@ body.edit-mode .island-group.dragging{opacity:.85;filter:brightness(1.2) drop-sh
 /* ── Label hover effect ── */
 .island-label{transition:transform 0.2s ease}
 .island-group:hover .island-label{transform:scale(1.08)}
+
+/* ── Table view (light green/white theme matching Dina brand) ── */
+#table-view{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--pg);z-index:790;display:none;overflow:auto;padding:20px 28px}
+#table-view.active{display:block}
+body.view-table #map-container,body.view-table #compass,body.view-table #minimap,body.view-table #legend,body.view-table #zoom-ctrl,body.view-table #ship{display:none}
+#table-view .table-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+#table-view .table-header h2{color:var(--dk);font-size:20px;font-weight:700}
+#table-view .table-header h2 span{color:var(--pk)}
+#table-view .table-header .table-count{color:#5a7a5a;font-size:13px}
+#table-view table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,40,20,.08)}
+#table-view thead th{position:sticky;top:0;background:var(--dk);color:#fff;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:11px 12px;text-align:left;border-bottom:2px solid var(--pk);cursor:pointer;user-select:none;white-space:nowrap;transition:background .15s}
+#table-view thead th:hover{background:#00562f}
+#table-view thead th .sort-arrow{display:inline-block;margin-left:4px;font-size:10px;opacity:.5;transition:opacity .15s}
+#table-view thead th.sorted .sort-arrow{opacity:1;color:var(--pk)}
+#table-view tbody tr{border-bottom:1px solid #e0ece0;transition:background .12s;cursor:pointer}
+#table-view tbody tr:hover{background:rgba(80,187,78,.08)}
+#table-view tbody tr:nth-child(even){background:#f5faf5}
+#table-view tbody tr:nth-child(even):hover{background:rgba(80,187,78,.12)}
+#table-view tbody td{padding:9px 12px;color:#1a3a1a;vertical-align:middle}
+#table-view tbody td.name-cell{font-weight:600;white-space:nowrap;color:var(--dk)}
+#table-view .type-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;letter-spacing:.3px}
+#table-view .type-badge.hub{background:rgba(212,168,67,.15);color:#8a6a20;border:1px solid rgba(212,168,67,.3)}
+#table-view .type-badge.satellite{background:rgba(80,187,78,.12);color:#2a7a2a;border:1px solid rgba(80,187,78,.25)}
+#table-view .type-badge.dept{background:rgba(60,130,160,.1);color:#2a6a80;border:1px solid rgba(60,130,160,.2)}
+#table-view .type-badge.project{background:rgba(160,70,110,.1);color:#8a3a5a;border:1px solid rgba(160,70,110,.2)}
+#table-view .terrain-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+#table-view .activity-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+#table-view .libs-list{font-size:11px;color:#5a7a5a;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#table-view .visited-badge{font-size:11px;padding:2px 7px;border-radius:8px}
+#table-view .visited-badge.yes{background:rgba(80,187,78,.15);color:#2a7a2a}
+#table-view .visited-badge.no{background:rgba(0,0,0,.04);color:#8a8a8a}
 </style>
 </head>
 <body>
@@ -169,7 +200,10 @@ body.edit-mode .island-group.dragging{opacity:.85;filter:brightness(1.2) drop-sh
   <div class="leg-item"><div class="leg-dot" style="background:#5a9aaa"></div> Frist&aring;ende webbplats</div>
   <div class="leg-item"><div class="leg-dot" style="background:#aa5a7a"></div> Projektwebbplats</div>
   <div class="leg-item"><div class="leg-line"></div> Brygga (hub-koppling)</div>
-  <div class="leg-item"><div class="leg-dot" style="background:rgba(100,100,100,.5);border:1px dashed rgba(255,255,255,.3)"></div> Ej bes&ouml;kt (dimma)</div>
+  <div class="leg-item"><div class="leg-dot" style="background:rgba(100,100,100,.3);border:1px dashed rgba(0,62,35,.3)"></div> Ej bes&ouml;kt (dimma)</div>
+  <hr style="border:0;border-top:1px solid rgba(255,255,255,.1);margin:8px 0">
+  <div class="leg-item"><div class="leg-dot" style="background:rgba(200,160,60,.3);border:2px solid rgba(212,168,67,.5)"></div> Kommunikationswebbplats</div>
+  <div class="leg-item"><div class="leg-dot" style="background:rgba(80,140,200,.2);border:2px dashed rgba(100,160,210,.5)"></div> Gruppwebbplats (Team)</div>
 </div>
 
 <!-- Zoom controls -->
@@ -187,6 +221,10 @@ body.edit-mode .island-group.dragging{opacity:.85;filter:brightness(1.2) drop-sh
   <div class="tb-sep"></div>
   <button id="btnResetLayout" title="Återställ alla öar till originalposition">↩ Återställ</button>
   <span class="save-indicator" id="saveIndicator">✓ Sparad</span>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Vy:</span>
+  <button id="btnMapView" class="active" title="Kartvy">🗺️ Karta</button>
+  <button id="btnTableView" title="Tabellvy">📋 Tabell</button>
 </div>
 
 <!-- Detail panel -->
@@ -212,6 +250,18 @@ body.edit-mode .island-group.dragging{opacity:.85;filter:brightness(1.2) drop-sh
   </div>
 </div>
 
+<!-- Table view -->
+<div id="table-view">
+  <div class="table-header">
+    <h2>&#128506; Alla <span>webbplatser</span></h2>
+    <span class="table-count" id="table-count"></span>
+  </div>
+  <table id="sites-table">
+    <thead><tr id="table-head"></tr></thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -228,6 +278,16 @@ const TERRAIN = {
   marsh:    {base:'#4a6a3a', light:'#6a8a5a', deep:'#2a4a20', beach:'#7a8868', water:'#2a7868'}
 };
 const TERRAIN_NAMES = {forest:'Skogsmark',meadow:'\u00c4ngsmark',snow:'Sn\u00f6landskap',desert:'\u00d6kenmark',volcanic:'Vulkaniskt',tropical:'Tropiskt',rocky:'Klippmark',marsh:'Myrmark'};
+
+// SharePoint site template classification
+// Communication Sites: hubs, broadcasting/publishing portals, intranets
+// Team Sites: collaborative workspaces, departments, projects
+const COMM_SITES = new Set([
+  'koncern','dinab','lantbruk','liv','gemit','ekofin', // all hubs
+  'komm','intranat','utbild','intro','forskning'       // publishing/broadcast sites
+]);
+function siteTemplate(isl) { return COMM_SITES.has(isl.id) ? 'comm' : 'team'; }
+const SITE_LABELS = {comm:'Kommunikationswebbplats', team:'Gruppwebbplats'};
 
 const islands = [
   // === HUBS (6) ===
@@ -513,32 +573,32 @@ function buildDefs() {
 
   // Ocean radial gradient — warmer center, dark edges
   const og = svgEl('radialGradient', {id:'oceanGrad', cx:'45%', cy:'40%', r:'70%'});
-  og.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'#1a6888'}));
-  og.appendChild(svgEl('stop', {offset:'20%', 'stop-color':'#155e7e'}));
-  og.appendChild(svgEl('stop', {offset:'50%', 'stop-color':'#0e4a68'}));
-  og.appendChild(svgEl('stop', {offset:'80%', 'stop-color':'#083656'}));
-  og.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'#041e38'}));
+  og.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'#48b8a8'}));
+  og.appendChild(svgEl('stop', {offset:'20%', 'stop-color':'#38a898'}));
+  og.appendChild(svgEl('stop', {offset:'50%', 'stop-color':'#2a9080'}));
+  og.appendChild(svgEl('stop', {offset:'80%', 'stop-color':'#1e7a6a'}));
+  og.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'#146858'}));
   defs.appendChild(og);
 
   // Deep trench gradient (dark zones) — very noticeable
   const tg = svgEl('radialGradient', {id:'trenchGrad', cx:'50%', cy:'50%', r:'50%'});
-  tg.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'#021220', 'stop-opacity':'0.8'}));
-  tg.appendChild(svgEl('stop', {offset:'50%', 'stop-color':'#031828', 'stop-opacity':'0.4'}));
-  tg.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'#041e30', 'stop-opacity':'0'}));
+  tg.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'#0a4040', 'stop-opacity':'0.35'}));
+  tg.appendChild(svgEl('stop', {offset:'50%', 'stop-color':'#0e4848', 'stop-opacity':'0.15'}));
+  tg.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'#125050', 'stop-opacity':'0'}));
   defs.appendChild(tg);
 
   // Shallow warm gradient (lighter zones between islands) — prominent
   const sg = svgEl('radialGradient', {id:'shallowGrad', cx:'50%', cy:'50%', r:'50%'});
-  sg.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'#20a8b8', 'stop-opacity':'0.55'}));
-  sg.appendChild(svgEl('stop', {offset:'40%', 'stop-color':'#1a98a8', 'stop-opacity':'0.3'}));
-  sg.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'#18889a', 'stop-opacity':'0'}));
+  sg.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'#60d8c8', 'stop-opacity':'0.5'}));
+  sg.appendChild(svgEl('stop', {offset:'40%', 'stop-color':'#48c8b8', 'stop-opacity':'0.25'}));
+  sg.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'#38b8a8', 'stop-opacity':'0'}));
   defs.appendChild(sg);
 
   // Turquoise warm spot gradient — clearly visible
   const tsg = svgEl('radialGradient', {id:'warmSpotGrad', cx:'50%', cy:'50%', r:'50%'});
-  tsg.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'#28c0b8', 'stop-opacity':'0.4'}));
-  tsg.appendChild(svgEl('stop', {offset:'50%', 'stop-color':'#20a8a0', 'stop-opacity':'0.18'}));
-  tsg.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'#18988a', 'stop-opacity':'0'}));
+  tsg.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'#68e0c8', 'stop-opacity':'0.35'}));
+  tsg.appendChild(svgEl('stop', {offset:'50%', 'stop-color':'#50c8b8', 'stop-opacity':'0.18'}));
+  tsg.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'#40b8a8', 'stop-opacity':'0'}));
   defs.appendChild(tsg);
 
   // Caustic light pattern — brighter and more visible
@@ -571,9 +631,9 @@ function buildDefs() {
 
   // Wave pattern — two layers with animated drift
   const wp = svgEl('pattern', {id:'wavePattern', width:'120', height:'35', patternUnits:'userSpaceOnUse'});
-  wp.appendChild(svgEl('path', {d:'M0 14 Q15 6 30 14 Q45 22 60 14 Q75 6 90 14 Q105 22 120 14', fill:'none', stroke:'rgba(140,220,255,0.12)', 'stroke-width':'1.2'}));
-  wp.appendChild(svgEl('path', {d:'M0 24 Q15 16 30 24 Q45 32 60 24 Q75 16 90 24 Q105 32 120 24', fill:'none', stroke:'rgba(110,200,245,0.08)', 'stroke-width':'0.9'}));
-  wp.appendChild(svgEl('path', {d:'M10 8 Q25 2 40 8 Q55 14 70 8 Q85 2 100 8', fill:'none', stroke:'rgba(160,230,255,0.09)', 'stroke-width':'0.7'}));
+  wp.appendChild(svgEl('path', {d:'M0 14 Q15 6 30 14 Q45 22 60 14 Q75 6 90 14 Q105 22 120 14', fill:'none', stroke:'rgba(255,255,255,0.18)', 'stroke-width':'1.2'}));
+  wp.appendChild(svgEl('path', {d:'M0 24 Q15 16 30 24 Q45 32 60 24 Q75 16 90 24 Q105 32 120 24', fill:'none', stroke:'rgba(255,255,255,0.12)', 'stroke-width':'0.9'}));
+  wp.appendChild(svgEl('path', {d:'M10 8 Q25 2 40 8 Q55 14 70 8 Q85 2 100 8', fill:'none', stroke:'rgba(255,255,255,0.14)', 'stroke-width':'0.7'}));
   // Animate pattern tile offset for wave drift
   const waveAnim = svgEl('animateTransform', {attributeName:'patternTransform', type:'translate', from:'0 0', to:'120 0', dur:'20s', repeatCount:'indefinite'});
   wp.appendChild(waveAnim);
@@ -642,9 +702,9 @@ function buildDefs() {
   // --- Atmosphere gradients ---
   const vignetteGrad = svgEl('radialGradient', {id:'vignetteGrad', cx:'50%', cy:'45%', r:'70%'});
   vignetteGrad.appendChild(svgEl('stop', {offset:'0%', 'stop-color':'rgba(4,15,30,0)', 'stop-opacity':'0'}));
-  vignetteGrad.appendChild(svgEl('stop', {offset:'60%', 'stop-color':'rgba(4,15,30,0.05)', 'stop-opacity':'0.05'}));
-  vignetteGrad.appendChild(svgEl('stop', {offset:'85%', 'stop-color':'rgba(4,15,30,0.25)', 'stop-opacity':'0.25'}));
-  vignetteGrad.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'rgba(4,15,30,0.6)', 'stop-opacity':'0.6'}));
+  vignetteGrad.appendChild(svgEl('stop', {offset:'60%', 'stop-color':'rgba(4,15,30,0.02)', 'stop-opacity':'0.02'}));
+  vignetteGrad.appendChild(svgEl('stop', {offset:'85%', 'stop-color':'rgba(4,15,30,0.1)', 'stop-opacity':'0.1'}));
+  vignetteGrad.appendChild(svgEl('stop', {offset:'100%', 'stop-color':'rgba(4,15,30,0.25)', 'stop-opacity':'0.25'}));
   defs.appendChild(vignetteGrad);
 
   return defs;
@@ -960,19 +1020,29 @@ function drawVegetation(g, isl, tc, rng) {
         const h = 8 + rng() * 10;
         const w = 4 + rng() * 4;
         const rot = (rng() - 0.5) * 10;
+        // Wrap tree in group; animate every 3rd tree for performance
+        const doSway = (i % 3 === 0);
+        const swayDeg = doSway ? (0.8 + rng() * 1.2).toFixed(1) : 0;
+        const swayDur = doSway ? (4 + rng() * 3).toFixed(1) + 's' : '0s';
+        const swayDelay = doSway ? (rng() * 4).toFixed(1) + 's' : '0s';
+        const treeG = doSway ? svgEl('g') : g; // only wrap animated trees
         // Deciduous tree (2-3 per island)
         if (i < 3 && rng() > 0.55) {
-          g.appendChild(svgEl('ellipse', { cx: String(tx), cy: String(ty + 2), rx: String(w * 0.8), ry: String(w * 0.25), fill: '#000', opacity: '0.12' }));
-          g.appendChild(svgEl('line', { x1: String(tx), y1: String(ty), x2: String(tx), y2: String(ty - h * 0.4), stroke: '#5a3a18', 'stroke-width': '2', 'stroke-linecap': 'round', transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')' }));
+          treeG.appendChild(svgEl('ellipse', { cx: String(tx), cy: String(ty + 2), rx: String(w * 0.8), ry: String(w * 0.25), fill: '#000', opacity: '0.12' }));
+          treeG.appendChild(svgEl('line', { x1: String(tx), y1: String(ty), x2: String(tx), y2: String(ty - h * 0.4), stroke: '#5a3a18', 'stroke-width': '2', 'stroke-linecap': 'round', transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')' }));
           const canR = w * 0.9 + rng() * 2;
           const canY = ty - h * 0.55;
-          g.appendChild(svgEl('circle', { cx: String(tx), cy: String(canY), r: String(canR), fill: tc.base, opacity: '0.8', transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')' }));
-          g.appendChild(svgEl('path', { d: 'M' + (tx - canR) + ',' + canY + ' A' + canR + ',' + canR + ' 0 0,0 ' + (tx + canR) + ',' + canY + ' Z', fill: tc.deep, opacity: '0.4', transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')' }));
+          treeG.appendChild(svgEl('circle', { cx: String(tx), cy: String(canY), r: String(canR), fill: tc.base, opacity: '0.8', transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')' }));
+          treeG.appendChild(svgEl('path', { d: 'M' + (tx - canR) + ',' + canY + ' A' + canR + ',' + canR + ' 0 0,0 ' + (tx + canR) + ',' + canY + ' Z', fill: tc.deep, opacity: '0.4', transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')' }));
+          if (doSway) {
+            treeG.appendChild(svgEl('animateTransform', { attributeName:'transform', type:'rotate', values: '-'+swayDeg+' '+tx+' '+ty+';'+swayDeg+' '+tx+' '+ty+';-'+swayDeg+' '+tx+' '+ty, dur:swayDur, begin:swayDelay, repeatCount:'indefinite' }));
+            g.appendChild(treeG);
+          }
           continue;
         }
         // Conifer shadow + trunk
-        g.appendChild(svgEl('ellipse', { cx: String(tx), cy: String(ty + 2), rx: String(w * 0.7), ry: String(w * 0.2), fill: '#000', opacity: '0.15' }));
-        g.appendChild(svgEl('line', { x1: String(tx), y1: String(ty), x2: String(tx), y2: String(ty + h * 0.3), stroke: '#5a3a18', 'stroke-width': '1.5', 'stroke-linecap': 'round', transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')' }));
+        treeG.appendChild(svgEl('ellipse', { cx: String(tx), cy: String(ty + 2), rx: String(w * 0.7), ry: String(w * 0.2), fill: '#000', opacity: '0.15' }));
+        treeG.appendChild(svgEl('line', { x1: String(tx), y1: String(ty), x2: String(tx), y2: String(ty + h * 0.3), stroke: '#5a3a18', 'stroke-width': '1.5', 'stroke-linecap': 'round', transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')' }));
         // Conifer layers with bezier curves
         const shades = [tc.deep, tc.base, tc.light];
         for (let layer = 0; layer < 3; layer++) {
@@ -981,10 +1051,14 @@ function drawVegetation(g, isl, tc, rng) {
           const ly = ty - h * 0.15 + layer * h * 0.18;
           const peakY = ly - lh;
           const curveOut = lw * 0.35;
-          g.appendChild(svgEl('path', {
+          treeG.appendChild(svgEl('path', {
             d: 'M' + tx + ',' + peakY + ' C' + (tx + curveOut * 0.3) + ',' + (peakY + lh * 0.3) + ' ' + (tx + lw + curveOut * 0.15) + ',' + (ly - lh * 0.15) + ' ' + (tx + lw) + ',' + ly + ' L' + (tx - lw) + ',' + ly + ' C' + (tx - lw - curveOut * 0.15) + ',' + (ly - lh * 0.15) + ' ' + (tx - curveOut * 0.3) + ',' + (peakY + lh * 0.3) + ' ' + tx + ',' + peakY + ' Z',
             fill: shades[layer], opacity: String(0.85 - layer * 0.08), transform: 'rotate(' + rot + ' ' + tx + ' ' + ty + ')'
           }));
+        }
+        if (doSway) {
+          treeG.appendChild(svgEl('animateTransform', { attributeName:'transform', type:'rotate', values: '-'+swayDeg+' '+tx+' '+ty+';'+swayDeg+' '+tx+' '+ty+';-'+swayDeg+' '+tx+' '+ty, dur:swayDur, begin:swayDelay, repeatCount:'indefinite' }));
+          g.appendChild(treeG);
         }
       }
       break;
@@ -1007,8 +1081,14 @@ function drawVegetation(g, isl, tc, rng) {
         const ty = Math.sin(angle) * innerRy * dist - ry * 0.1;
         const h = 12 + rng() * 10;
         const curve = (rng() - 0.5) * 8;
-        g.appendChild(svgEl('path', { d: 'M' + tx + ',' + ty + ' Q' + (tx + curve) + ',' + (ty - h * 0.5) + ' ' + (tx + curve * 0.5) + ',' + (ty - h), fill: 'none', stroke: '#7a5a2a', 'stroke-width': '2.5', 'stroke-linecap': 'round' }));
-        g.appendChild(svgEl('path', { d: 'M' + tx + ',' + ty + ' Q' + (tx + curve) + ',' + (ty - h * 0.5) + ' ' + (tx + curve * 0.5) + ',' + (ty - h), fill: 'none', stroke: '#5a3a1a', 'stroke-width': '0.5', opacity: '0.3' }));
+        // Only animate every 3rd palm for performance
+        const doSway = (i % 3 === 0);
+        const swayDeg = doSway ? (1 + rng() * 1.5).toFixed(1) : 0;
+        const swayDur = doSway ? (3.5 + rng() * 3).toFixed(1) + 's' : '0s';
+        const swayDelay = doSway ? (rng() * 4).toFixed(1) + 's' : '0s';
+        const palmG = doSway ? svgEl('g') : g;
+        palmG.appendChild(svgEl('path', { d: 'M' + tx + ',' + ty + ' Q' + (tx + curve) + ',' + (ty - h * 0.5) + ' ' + (tx + curve * 0.5) + ',' + (ty - h), fill: 'none', stroke: '#7a5a2a', 'stroke-width': '2.5', 'stroke-linecap': 'round' }));
+        palmG.appendChild(svgEl('path', { d: 'M' + tx + ',' + ty + ' Q' + (tx + curve) + ',' + (ty - h * 0.5) + ' ' + (tx + curve * 0.5) + ',' + (ty - h), fill: 'none', stroke: '#5a3a1a', 'stroke-width': '0.5', opacity: '0.3' }));
         const topX = tx + curve * 0.5;
         const topY = ty - h;
         const frondCount = 7 + Math.floor(rng() * 2);
@@ -1020,18 +1100,22 @@ function drawVegetation(g, isl, tc, rng) {
           const fy = topY + Math.sin(fa) * fl * 0.6 + droopY;
           const midX = (topX + fx) / 2 + (rng() - 0.5) * 3;
           const midY = (topY + fy) / 2 - 2;
-          g.appendChild(svgEl('path', { d: 'M' + topX + ',' + topY + ' Q' + midX + ',' + midY + ' ' + fx + ',' + fy, fill: 'none', stroke: tc.base, 'stroke-width': '3', 'stroke-linecap': 'round', opacity: '0.75' }));
-          g.appendChild(svgEl('path', { d: 'M' + topX + ',' + topY + ' Q' + midX + ',' + midY + ' ' + fx + ',' + fy, fill: 'none', stroke: tc.deep, 'stroke-width': '0.7', 'stroke-linecap': 'round', opacity: '0.5' }));
+          palmG.appendChild(svgEl('path', { d: 'M' + topX + ',' + topY + ' Q' + midX + ',' + midY + ' ' + fx + ',' + fy, fill: 'none', stroke: tc.base, 'stroke-width': '3', 'stroke-linecap': 'round', opacity: '0.75' }));
+          palmG.appendChild(svgEl('path', { d: 'M' + topX + ',' + topY + ' Q' + midX + ',' + midY + ' ' + fx + ',' + fy, fill: 'none', stroke: tc.deep, 'stroke-width': '0.7', 'stroke-linecap': 'round', opacity: '0.5' }));
         }
         if (rng() > 0.5) {
-          g.appendChild(svgEl('circle', {cx: String(topX + 1), cy: String(topY + 2), r: '1.5', fill: '#8a6a28'}));
-          g.appendChild(svgEl('circle', {cx: String(topX - 1.5), cy: String(topY + 3), r: '1.2', fill: '#7a5a20'}));
+          palmG.appendChild(svgEl('circle', {cx: String(topX + 1), cy: String(topY + 2), r: '1.5', fill: '#8a6a28'}));
+          palmG.appendChild(svgEl('circle', {cx: String(topX - 1.5), cy: String(topY + 3), r: '1.2', fill: '#7a5a20'}));
         }
         if (rng() > 0.4) {
           const flowerColors = ['#ff6088', '#ffcc44', '#ff80c0', '#cc44ff'];
           for (let fl = 0; fl < 2 + Math.floor(rng() * 2); fl++) {
-            g.appendChild(svgEl('circle', { cx: String(tx + (rng() - 0.5) * 5), cy: String(ty + rng() * 2), r: String(0.8 + rng() * 0.8), fill: flowerColors[Math.floor(rng() * flowerColors.length)], opacity: '0.7' }));
+            palmG.appendChild(svgEl('circle', { cx: String(tx + (rng() - 0.5) * 5), cy: String(ty + rng() * 2), r: String(0.8 + rng() * 0.8), fill: flowerColors[Math.floor(rng() * flowerColors.length)], opacity: '0.7' }));
           }
+        }
+        if (doSway) {
+          palmG.appendChild(svgEl('animateTransform', { attributeName:'transform', type:'rotate', values: '-'+swayDeg+' '+tx+' '+ty+';'+swayDeg+' '+tx+' '+ty+';-'+swayDeg+' '+tx+' '+ty, dur:swayDur, begin:swayDelay, repeatCount:'indefinite' }));
+          g.appendChild(palmG);
         }
       }
       break;
@@ -1583,13 +1667,169 @@ function drawIsland(parentG, isl, idx) {
   drawMountains(mtG, isl, tc, mtRng);
   g.appendChild(mtG);
 
-  // === Layer 9: Emoji landmark ===
-  g.appendChild(svgEl('text', {
-    x: '0', y: String(-ry * 0.05),
-    'text-anchor': 'middle', 'dominant-baseline': 'central',
-    'font-size': String(isHub ? 28 : 20),
-    style: 'pointer-events:none'
-  }, isl.emoji));
+  // === Layer 8b: Library buildings ===
+  const libRng = lcg(seed + 750);
+  const numLibs = isl.libs.length;
+  const libScale = isHub ? 1.2 : 0.85;
+  const libSpread = rx * 0.55; // horizontal spread
+  const libBaseY = ry * 0.12; // vertical center for buildings (lower half)
+  isl.libs.forEach((lib, li) => {
+    // Position: evenly distributed horizontally, slight random offset
+    const libFrac = numLibs === 1 ? 0 : (li / (numLibs - 1)) - 0.5; // -0.5 to 0.5
+    const bx = libFrac * libSpread * 1.6 + (libRng() - 0.5) * 6;
+    const by = libBaseY + (libRng() - 0.5) * ry * 0.25;
+
+    const bW = (10 + Math.min(lib.c, 100) * 0.06) * libScale; // wider for more docs
+    const bH = (10 + Math.min(lib.c, 100) * 0.08) * libScale; // taller for more docs
+    const roofH = bH * 0.45;
+
+    const bldgG = svgEl('g', {
+      transform: 'translate(' + bx.toFixed(1) + ',' + by.toFixed(1) + ')'
+    });
+    // Tooltip with library name and doc count
+    bldgG.appendChild(svgEl('title', {}, lib.n + ' (' + lib.c + ' dok)'));
+
+    // Building shadow
+    bldgG.appendChild(svgEl('rect', {
+      x: String((-bW / 2 + 1).toFixed(1)), y: String((-bH + 2).toFixed(1)),
+      width: String(bW.toFixed(1)), height: String(bH.toFixed(1)),
+      rx: '1', fill: 'rgba(0,0,0,0.2)'
+    }));
+
+    // Building body
+    const wallColor = isHub ? '#c8a850' : '#b8a878';
+    const wallDark = isHub ? '#8a7030' : '#7a6a50';
+    bldgG.appendChild(svgEl('rect', {
+      x: String((-bW / 2).toFixed(1)), y: String((-bH).toFixed(1)),
+      width: String(bW.toFixed(1)), height: String(bH.toFixed(1)),
+      rx: '1', fill: wallColor, stroke: wallDark, 'stroke-width': '0.5'
+    }));
+
+    // Window / door detail (small dark rect)
+    const doorW = bW * 0.25;
+    const doorH = bH * 0.35;
+    bldgG.appendChild(svgEl('rect', {
+      x: String((-doorW / 2).toFixed(1)), y: String((-doorH - 1).toFixed(1)),
+      width: String(doorW.toFixed(1)), height: String(doorH.toFixed(1)),
+      rx: '0.5', fill: wallDark, opacity: '0.5'
+    }));
+
+    // Windows (one on each side of door for wider buildings)
+    if (bW > 10) {
+      const winS = 2 * libScale;
+      bldgG.appendChild(svgEl('rect', {
+        x: String((-bW / 2 + 2).toFixed(1)), y: String((-bH + 3).toFixed(1)),
+        width: String(winS.toFixed(1)), height: String(winS.toFixed(1)),
+        fill: '#5a8aa8', stroke: wallDark, 'stroke-width': '0.3', opacity: '0.8'
+      }));
+      bldgG.appendChild(svgEl('rect', {
+        x: String((bW / 2 - 2 - winS).toFixed(1)), y: String((-bH + 3).toFixed(1)),
+        width: String(winS.toFixed(1)), height: String(winS.toFixed(1)),
+        fill: '#5a8aa8', stroke: wallDark, 'stroke-width': '0.3', opacity: '0.8'
+      }));
+    }
+
+    // Roof (triangle)
+    const roofColor = isHub ? '#6a4a28' : '#5a5048';
+    const roofLeft = -bW / 2 - 2;
+    const roofRight = bW / 2 + 2;
+    const roofTop = -bH - roofH;
+    bldgG.appendChild(svgEl('path', {
+      d: 'M' + roofLeft.toFixed(1) + ',' + (-bH).toFixed(1) +
+         ' L0,' + roofTop.toFixed(1) +
+         ' L' + roofRight.toFixed(1) + ',' + (-bH).toFixed(1) + ' Z',
+      fill: roofColor, stroke: wallDark, 'stroke-width': '0.4'
+    }));
+
+    // Library name initial on roof peak
+    bldgG.appendChild(svgEl('text', {
+      x: '0', y: String((roofTop + roofH * 0.45).toFixed(1)),
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      fill: '#fff', 'font-size': String((4 * libScale).toFixed(1)),
+      'font-weight': '700', opacity: '0.7',
+      'font-family': "'Segoe UI',system-ui,sans-serif",
+      style: 'pointer-events:none'
+    }, lib.n.charAt(0).toUpperCase()));
+
+    // Document count badge
+    const badgeY = -bH / 2;
+    const countStr = String(lib.c);
+    const badgeW = Math.max(8, countStr.length * 4 + 4) * libScale;
+    const badgeH = 6 * libScale;
+    bldgG.appendChild(svgEl('rect', {
+      x: String((-badgeW / 2).toFixed(1)), y: String((badgeY - badgeH / 2).toFixed(1)),
+      width: String(badgeW.toFixed(1)), height: String(badgeH.toFixed(1)),
+      rx: String((badgeH / 2).toFixed(1)), fill: 'rgba(0,0,0,0.55)'
+    }));
+    bldgG.appendChild(svgEl('text', {
+      x: '0', y: String((badgeY + 0.5).toFixed(1)),
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      fill: '#fff', 'font-size': String((4.5 * libScale).toFixed(1)),
+      'font-weight': '700',
+      'font-family': "'Segoe UI',system-ui,sans-serif",
+      style: 'pointer-events:none'
+    }, countStr));
+
+    g.appendChild(bldgG);
+  });
+
+  // === Layer 9: Site type icon (Team Site vs Communication Site) ===
+  const stIcon = svgEl('g', {
+    transform: 'translate(0,' + (-ry * 0.35) + ')',
+    opacity: '0.7', style: 'pointer-events:none'
+  });
+  const stIsComm = COMM_SITES.has(isl.id);
+  const stS = isHub ? 1.3 : 0.9; // scale factor
+  if (stIsComm) {
+    // Communication Site: broadcast tower / megaphone icon
+    const mc = isHub ? '#d4a843' : '#a0b8c8';
+    // Tower base
+    stIcon.appendChild(svgEl('rect', {
+      x: String(-2 * stS), y: String(-2 * stS), width: String(4 * stS), height: String(12 * stS),
+      rx: '1', fill: mc
+    }));
+    // Tower top disc
+    stIcon.appendChild(svgEl('ellipse', {
+      cx: '0', cy: String(-3 * stS), rx: String(3.5 * stS), ry: String(2 * stS),
+      fill: 'none', stroke: mc, 'stroke-width': String(1.2 * stS)
+    }));
+    // Broadcast waves (3 arcs)
+    for (let w = 0; w < 3; w++) {
+      const wr = (6 + w * 4) * stS;
+      stIcon.appendChild(svgEl('path', {
+        d: 'M' + (-wr * 0.7).toFixed(1) + ',' + (-3 * stS - wr * 0.4).toFixed(1) +
+           ' A' + wr.toFixed(1) + ',' + wr.toFixed(1) + ' 0 0,1 ' +
+           (wr * 0.7).toFixed(1) + ',' + (-3 * stS - wr * 0.4).toFixed(1),
+        fill: 'none', stroke: mc, 'stroke-width': String(0.8 * stS),
+        opacity: String((0.6 - w * 0.15).toFixed(2))
+      }));
+    }
+  } else {
+    // Team Site: people silhouettes icon
+    const pc = '#8ab8d8';
+    // Center person (slightly larger)
+    stIcon.appendChild(svgEl('circle', { cx: '0', cy: String(-1 * stS), r: String(3 * stS), fill: pc }));
+    stIcon.appendChild(svgEl('path', {
+      d: 'M' + (-5 * stS) + ',' + (9 * stS) + ' Q' + (-5 * stS) + ',' + (3 * stS) + ' 0,' + (3 * stS) +
+         ' Q' + (5 * stS) + ',' + (3 * stS) + ' ' + (5 * stS) + ',' + (9 * stS),
+      fill: pc
+    }));
+    // Left person (smaller, behind)
+    stIcon.appendChild(svgEl('circle', { cx: String(-7 * stS), cy: String(0 * stS), r: String(2.3 * stS), fill: pc, opacity: '0.6' }));
+    stIcon.appendChild(svgEl('path', {
+      d: 'M' + (-11 * stS) + ',' + (9 * stS) + ' Q' + (-11 * stS) + ',' + (4 * stS) + ' ' + (-7 * stS) + ',' + (4 * stS) +
+         ' Q' + (-3 * stS) + ',' + (4 * stS) + ' ' + (-3 * stS) + ',' + (9 * stS),
+      fill: pc, opacity: '0.6'
+    }));
+    // Right person (smaller, behind)
+    stIcon.appendChild(svgEl('circle', { cx: String(7 * stS), cy: String(0 * stS), r: String(2.3 * stS), fill: pc, opacity: '0.6' }));
+    stIcon.appendChild(svgEl('path', {
+      d: 'M' + (3 * stS) + ',' + (9 * stS) + ' Q' + (3 * stS) + ',' + (4 * stS) + ' ' + (7 * stS) + ',' + (4 * stS) +
+         ' Q' + (11 * stS) + ',' + (4 * stS) + ' ' + (11 * stS) + ',' + (9 * stS),
+      fill: pc, opacity: '0.6'
+    }));
+  }
+  g.appendChild(stIcon);
 
   // === Layer 10: Activity indicator ===
   const actColors = {high:'#50bb4e', medium:'#e8b020', low:'#888'};
@@ -1617,12 +1857,24 @@ function drawIsland(parentG, isl, idx) {
   }
   g.appendChild(actG);
 
-  // === Hub glow ===
+  // === Site type ring (Comm = gold/amber, Team = blue) ===
+  const stRingComm = COMM_SITES.has(isl.id);
   if (isHub) {
-    // Gold ring
+    // Hub: bold ring
     g.appendChild(svgEl('path', {
       d: blobPath(0, 0, rx + 4, ry + 3, seed + 50, 12),
-      fill: 'none', stroke: 'rgba(212,168,67,0.45)', 'stroke-width': '2.5'
+      fill: 'none',
+      stroke: stRingComm ? 'rgba(212,168,67,0.45)' : 'rgba(100,160,210,0.45)',
+      'stroke-width': '2.5'
+    }));
+  } else {
+    // Non-hub: thinner dashed ring
+    g.appendChild(svgEl('path', {
+      d: blobPath(0, 0, rx + 3, ry + 2, seed + 50, 12),
+      fill: 'none',
+      stroke: stRingComm ? 'rgba(200,160,60,0.25)' : 'rgba(80,140,200,0.25)',
+      'stroke-width': '1.5',
+      'stroke-dasharray': stRingComm ? 'none' : '4 3'
     }));
   }
 
@@ -1642,15 +1894,16 @@ function drawIsland(parentG, isl, idx) {
   const labelBorder = isHub ? 'rgba(180,150,80,0.3)' : 'rgba(100,130,100,0.2)';
   const labelColor = isHub ? '#ffe080' : '#e0e8e0';
   const fontSize = isHub ? 12 : 10;
-  const starPrefix = isHub ? '\u2605 ' : '';
-  const labelText = starPrefix + isl.emoji + ' ' + isl.name;
+  const stPrefix = COMM_SITES.has(isl.id) ? (isHub ? '\u2605 ' : '\u25C8 ') : '\u25CB ';
+  const labelText = stPrefix + isl.name;
   const textWidth = labelText.length * fontSize * 0.52;
   const pillW = textWidth + 20;
   const pillH = fontSize + 12;
 
   // Sub-label (document count)
   const subFontSize = isHub ? 8 : 7;
-  const subText = isl.docs + ' dok';
+  const stLabel = COMM_SITES.has(isl.id) ? 'Komm' : 'Team';
+  const subText = stLabel + ' \u00b7 ' + isl.docs + ' dok';
   const subTextWidth = subText.length * subFontSize * 0.52;
   const subPillW = subTextWidth + 12;
   const subPillH = subFontSize + 8;
@@ -1711,7 +1964,7 @@ function drawIsland(parentG, isl, idx) {
       style: 'pointer-events:none'
     });
     const starSpan = svgEl('tspan', { fill: '#d4a843' }, '\u2605 ');
-    const restSpan = svgEl('tspan', { fill: labelColor }, isl.emoji + ' ' + isl.name);
+    const restSpan = svgEl('tspan', { fill: labelColor }, isl.name);
     mainTextEl.appendChild(starSpan);
     mainTextEl.appendChild(restSpan);
     labelGroup.appendChild(mainTextEl);
@@ -1723,7 +1976,7 @@ function drawIsland(parentG, isl, idx) {
       'font-weight': '500',
       'font-family': "'Segoe UI',system-ui,sans-serif",
       style: 'pointer-events:none'
-    }, isl.emoji + ' ' + isl.name));
+    }, isl.name));
   }
 
   // --- Sub-label shadow ---
@@ -1992,54 +2245,7 @@ function addAnimations() {
   const ag = svgEl('g', {id: 'animation-overlay', 'pointer-events': 'none'});
   const animRng = lcg(31415);
 
-  // ── 1. Tree Sway — small animated leaf/branch shapes on forested islands ──
-  const treeTerrain = ['forest', 'tropical', 'meadow'];
-  islands.forEach(isl => {
-    if (!treeTerrain.includes(isl.terrain)) return;
-    const treeCount = 2 + Math.floor(animRng() * 2); // 2-3 per island
-    for (let t = 0; t < treeCount; t++) {
-      const angle = animRng() * Math.PI * 2;
-      const dist = 0.3 + animRng() * 0.45; // inside the island body
-      const tx = isl.x + Math.cos(angle) * isl.rx * dist;
-      const ty = isl.y + Math.sin(angle) * isl.ry * dist * 0.65;
-      const treeH = 6 + animRng() * 5;
-      const dur = (3 + animRng() * 2).toFixed(1) + 's';
-      const delay = (animRng() * 2).toFixed(1) + 's';
-
-      const treeG = svgEl('g', {transform: 'translate(' + tx.toFixed(1) + ',' + ty.toFixed(1) + ')'});
-
-      // Trunk
-      treeG.appendChild(svgEl('line', {
-        x1: '0', y1: '0', x2: '0', y2: String(-treeH),
-        stroke: '#5a4020', 'stroke-width': '0.8', 'stroke-linecap': 'round', opacity: '0.5'
-      }));
-
-      // Canopy — small triangle
-      const canopyW = 3 + animRng() * 2;
-      const canopyColor = isl.terrain === 'tropical' ? 'rgba(40,170,90,0.45)'
-                        : isl.terrain === 'meadow' ? 'rgba(90,154,60,0.4)'
-                        : 'rgba(45,122,80,0.45)';
-      treeG.appendChild(svgEl('path', {
-        d: 'M0,' + (-treeH - 3).toFixed(1) + ' L' + (-canopyW).toFixed(1) + ',' + (-treeH * 0.45).toFixed(1) + ' L' + canopyW.toFixed(1) + ',' + (-treeH * 0.45).toFixed(1) + ' Z',
-        fill: canopyColor
-      }));
-
-      // Sway animation — rotate around base
-      const sway = svgEl('animateTransform', {
-        attributeName: 'transform',
-        type: 'rotate',
-        values: '-1.5 ' + tx.toFixed(1) + ' ' + ty.toFixed(1) + ';1.5 ' + tx.toFixed(1) + ' ' + ty.toFixed(1) + ';-1.5 ' + tx.toFixed(1) + ' ' + ty.toFixed(1),
-        dur: dur,
-        begin: delay,
-        repeatCount: 'indefinite',
-        additive: 'sum'
-      });
-      treeG.appendChild(sway);
-      ag.appendChild(treeG);
-    }
-  });
-
-  // ── 2. Flying Birds — V-shaped silhouettes along bezier paths ──
+  // ── 1. Flying Birds — V-shaped silhouettes along bezier paths ──
   const birdPaths = [
     {id: 'birdPath1', d: 'M-1400,-500 C-800,-600 -200,-200 400,-450 C800,-600 1100,-300 1500,-400'},
     {id: 'birdPath2', d: 'M1500,300 C1000,150 500,400 0,200 C-500,0 -900,250 -1400,100'},
@@ -2273,10 +2479,11 @@ function selectIsland(isl) {
   isl.visited = true;
 
   // Update detail panel
-  document.getElementById('dp-emoji').textContent = isl.emoji;
+  const stTpl = COMM_SITES.has(isl.id) ? 'Kommunikationswebbplats' : 'Gruppwebbplats';
+  document.getElementById('dp-emoji').textContent = COMM_SITES.has(isl.id) ? '\u{1F4E1}' : '\u{1F465}';
   document.getElementById('dp-name').textContent = isl.name;
-  const typeLabels = {hub:'Hub-webbplats',satellite:'Satellit',dept:'Avdelning',project:'Projekt'};
-  document.getElementById('dp-type').textContent = typeLabels[isl.type] || isl.type;
+  const typeLabels = {hub:'Hub',satellite:'Satellit',dept:'Avdelning',project:'Projekt'};
+  document.getElementById('dp-type').textContent = (typeLabels[isl.type] || isl.type) + ' \u00b7 ' + stTpl;
   document.getElementById('dp-terrain').textContent = 'Terrängtyp: ' + (TERRAIN_NAMES[isl.terrain] || isl.terrain);
   document.getElementById('dp-desc').textContent = isl.desc;
   document.getElementById('dp-docs').textContent = String(isl.docs);
@@ -2301,7 +2508,7 @@ function selectIsland(isl) {
   // Remove fog overlay from this island
   removeFog(isl);
 
-  showToast('Navigerar till ' + isl.emoji + ' ' + isl.name);
+  showToast('Navigerar till ' + isl.name);
 }
 
 function removeFog(isl) {
@@ -2451,7 +2658,7 @@ container.addEventListener('wheel', e => {
   const worldBefore = screenToWorld(mx, my);
 
   const zoomFactor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-  scale = Math.max(0.15, Math.min(3, scale * zoomFactor));
+  scale = Math.max(0.15, Math.min(8, scale * zoomFactor));
 
   const worldAfter = screenToWorld(mx, my);
   panX += (worldAfter.x - worldBefore.x) * scale;
@@ -2528,7 +2735,7 @@ container.addEventListener('touchmove', e => {
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (lastTouchDist > 0) {
       const factor = dist / lastTouchDist;
-      scale = Math.max(0.15, Math.min(3, scale * factor));
+      scale = Math.max(0.15, Math.min(8, scale * factor));
       updateTransform();
     }
     lastTouchDist = dist;
@@ -2549,7 +2756,7 @@ container.addEventListener('touchend', () => {
 
 // Zoom controls
 document.getElementById('zoomIn').addEventListener('click', () => {
-  scale = Math.min(3, scale * 1.3);
+  scale = Math.min(8, scale * 1.3);
   updateTransform();
 });
 document.getElementById('zoomOut').addEventListener('click', () => {
@@ -2581,7 +2788,7 @@ document.addEventListener('keydown', e => {
     detailPanel.classList.remove('open');
     selectedIsland = null;
   } else if (e.key === '+' || e.key === '=') {
-    scale = Math.min(3, scale * 1.2);
+    scale = Math.min(8, scale * 1.2);
     updateTransform();
   } else if (e.key === '-') {
     scale = Math.max(0.15, scale / 1.2);
@@ -2638,6 +2845,137 @@ document.getElementById('btnResetLayout').addEventListener('click', () => {
     resetLayout();
   }
 });
+
+// ========== TABLE VIEW ==========
+const tableColumns = [
+  {key:'name',    label:'Webbplats',    sortFn: (a,b) => a.name.localeCompare(b.name, 'sv')},
+  {key:'template',label:'Webbplatstyp', sortFn: (a,b) => {const sa=COMM_SITES.has(a.id)?1:0, sb=COMM_SITES.has(b.id)?1:0; return sa-sb;}},
+  {key:'type',    label:'Roll',         sortFn: (a,b) => a.type.localeCompare(b.type)},
+  {key:'group',   label:'Grupp',        sortFn: (a,b) => (a.hubId||a.id).localeCompare(b.hubId||b.id)},
+  {key:'docs',    label:'Dokument',     sortFn: (a,b) => a.docs - b.docs},
+  {key:'libs',    label:'Bibliotek',    sortFn: (a,b) => a.libs.length - b.libs.length},
+  {key:'activity',label:'Aktivitet',    sortFn: (a,b) => {const o={high:3,medium:2,low:1}; return (o[a.activity]||0)-(o[b.activity]||0);}},
+  {key:'visited', label:'Besökt',       sortFn: (a,b) => (a.visited?1:0)-(b.visited?1:0)}
+];
+let tableSortCol = 'name';
+let tableSortAsc = true;
+let currentView = 'map'; // 'map' or 'table'
+
+function buildTableHead() {
+  const tr = document.getElementById('table-head');
+  tr.innerHTML = '';
+  tableColumns.forEach(col => {
+    const th = document.createElement('th');
+    th.dataset.col = col.key;
+    const arrow = tableSortCol === col.key ? (tableSortAsc ? ' \u25B2' : ' \u25BC') : ' \u25B4';
+    th.innerHTML = col.label + '<span class="sort-arrow">' + arrow + '</span>';
+    if (tableSortCol === col.key) th.classList.add('sorted');
+    th.addEventListener('click', () => {
+      if (tableSortCol === col.key) { tableSortAsc = !tableSortAsc; }
+      else { tableSortCol = col.key; tableSortAsc = true; }
+      buildTableHead();
+      renderTableBody();
+    });
+    tr.appendChild(th);
+  });
+}
+
+function renderTableBody() {
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  const col = tableColumns.find(c => c.key === tableSortCol);
+  const sorted = [...islands].sort((a, b) => {
+    const r = col.sortFn(a, b);
+    return tableSortAsc ? r : -r;
+  });
+  const typeLabels = {hub:'Hub',satellite:'Satellit',dept:'Avdelning',project:'Projekt'};
+  const actLabels = {high:'Hög',medium:'Medel',low:'Låg'};
+  const actColors = {high:'#50bb4e',medium:'#e8b020',low:'#888'};
+  const hubMap = {};
+  islands.forEach(i => { if (i.type === 'hub') hubMap[i.id] = i; });
+
+  sorted.forEach(isl => {
+    const tr = document.createElement('tr');
+    const isComm = COMM_SITES.has(isl.id);
+    // Name
+    const tdName = document.createElement('td');
+    tdName.className = 'name-cell';
+    tdName.textContent = isl.name;
+    tr.appendChild(tdName);
+    // Site template
+    const tdTpl = document.createElement('td');
+    if (isComm) {
+      tdTpl.innerHTML = '<span class="type-badge" style="background:rgba(212,168,67,.15);color:var(--gold);border:1px solid rgba(212,168,67,.3)">\u{1F4E1} Kommunikation</span>';
+    } else {
+      tdTpl.innerHTML = '<span class="type-badge" style="background:rgba(80,140,200,.15);color:#8ac;border:1px solid rgba(80,140,200,.3)">\u{1F465} Grupp (Team)</span>';
+    }
+    tr.appendChild(tdTpl);
+    // Role/Type
+    const tdType = document.createElement('td');
+    tdType.innerHTML = '<span class="type-badge ' + isl.type + '">' + (typeLabels[isl.type]||isl.type) + '</span>';
+    tr.appendChild(tdType);
+    // Group (hub name)
+    const tdGroup = document.createElement('td');
+    const hub = isl.hubId ? hubMap[isl.hubId] : null;
+    tdGroup.textContent = isl.type === 'hub' ? '(egen hub)' : hub ? hub.name : '\u2014';
+    tdGroup.style.color = hub ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.35)';
+    tr.appendChild(tdGroup);
+    // Docs
+    const tdDocs = document.createElement('td');
+    tdDocs.textContent = String(isl.docs);
+    tdDocs.style.fontVariantNumeric = 'tabular-nums';
+    tr.appendChild(tdDocs);
+    // Libs
+    const tdLibs = document.createElement('td');
+    const libNames = isl.libs.map(l => l.n).join(', ');
+    tdLibs.innerHTML = '<span style="color:var(--pk);font-weight:600;margin-right:6px">' + isl.libs.length + '</span><span class="libs-list">' + libNames + '</span>';
+    tr.appendChild(tdLibs);
+    // Activity
+    const tdAct = document.createElement('td');
+    tdAct.innerHTML = '<span class="activity-dot" style="background:' + (actColors[isl.activity]||'#888') + '"></span>' + (actLabels[isl.activity]||isl.activity);
+    tr.appendChild(tdAct);
+    // Visited
+    const tdVis = document.createElement('td');
+    tdVis.innerHTML = isl.visited
+      ? '<span class="visited-badge yes">\u2713 Ja</span>'
+      : '<span class="visited-badge no">Nej</span>';
+    tr.appendChild(tdVis);
+
+    // Click row to open detail panel + navigate on map
+    tr.addEventListener('click', () => {
+      selectIsland(isl);
+      // Also center map on this island for when user switches back
+      panX = -isl.x * scale;
+      panY = -isl.y * scale;
+      updateTransform();
+    });
+    tbody.appendChild(tr);
+  });
+  document.getElementById('table-count').textContent = sorted.length + ' webbplatser';
+}
+
+function switchView(view) {
+  currentView = view;
+  const tableView = document.getElementById('table-view');
+  const btnMap = document.getElementById('btnMapView');
+  const btnTable = document.getElementById('btnTableView');
+  if (view === 'table') {
+    document.body.classList.add('view-table');
+    tableView.classList.add('active');
+    btnTable.classList.add('active');
+    btnMap.classList.remove('active');
+    buildTableHead();
+    renderTableBody();
+  } else {
+    document.body.classList.remove('view-table');
+    tableView.classList.remove('active');
+    btnMap.classList.add('active');
+    btnTable.classList.remove('active');
+  }
+}
+
+document.getElementById('btnMapView').addEventListener('click', () => switchView('map'));
+document.getElementById('btnTableView').addEventListener('click', () => switchView('table'));
 
 // ========== INIT ==========
 // Load saved layout before building map
