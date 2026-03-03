@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SvenskVent CRM — Mobil Dashboard</title>
+<style>
+  /* ── Reset & Page ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:        #15cbc5;
+    --teal-light:  #b2f0ee;
+    --teal-dark:   #0fa8a3;
+    --purple:      #7B61FF;
+    --purple-light:#c4b5fd;
+    --green:       #22c55e;
+    --green-light: #bbf7d0;
+    --orange:      #f97316;
+    --orange-light:#fed7aa;
+    --red:         #ef4444;
+    --app-bg:      #f1f5f9;
+    --card-bg:     #ffffff;
+    --text:        #1e293b;
+    --text-muted:  #64748b;
+    --page-bg:     #e2e8f0;
+    --font:        system-ui, -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--page-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 12px;
+    padding-top: 60px;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Phone Frame ── */
+  .phone-frame {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    background: var(--app-bg);
+    border-radius: 47px;
+    box-shadow:
+      0 0 0 3px #1a1a1a,
+      0 0 0 6px #3a3a3a,
+      0 30px 80px rgba(0,0,0,.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Notch ── */
+  .phone-notch {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 126px; height: 34px;
+    background: #1a1a1a;
+    border-radius: 0 0 20px 20px;
+    z-index: 100;
+  }
+
+  /* ── Status Bar ── */
+  .status-bar {
+    flex-shrink: 0;
+    height: 54px;
+    background: var(--card-bg);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 6px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 50;
+  }
+  .status-bar .time { margin-left: 4px; }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; }
+  .status-bar .icons svg { width: 16px; height: 16px; fill: var(--text); }
+
+  /* ── Top Bar ── */
+  .top-bar {
+    flex-shrink: 0;
+    background: var(--card-bg);
+    padding: 6px 20px 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    z-index: 40;
+  }
+  .top-bar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .svs-m{display:inline-flex;gap:2px;background:#1a1a1a;padding:2px 4px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .svs-d{width:6px;height:6px;border-radius:50%;background:#c8a961}
+  .greeting { font-size: 20px; font-weight: 700; }
+  .bell-wrap {
+    position: relative;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--app-bg);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .bell-wrap svg { width: 22px; height: 22px; fill: var(--text-muted); }
+  .bell-badge {
+    position: absolute; top: 4px; right: 4px;
+    width: 18px; height: 18px;
+    background: var(--red);
+    color: #fff;
+    font-size: 11px; font-weight: 700;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+
+  /* AI suggestion ribbon */
+  .ai-ribbon {
+    margin-top: 10px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Scrollable Content ── */
+  .dashboard-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 16px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  .dashboard-scroll::-webkit-scrollbar { width: 0; }
+
+  /* ── Widget card base ── */
+  .widget {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: none;
+  }
+  .widget.visible {
+    animation: widgetIn .65s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes widgetIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .widget-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Widget 1: Pipeline Donut ── */
+  .donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .donut-container {
+    position: relative;
+    width: 180px; height: 180px;
+  }
+  .donut-container svg { width: 100%; height: 100%; }
+  .donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .donut-center .value { font-size: 26px; font-weight: 800; }
+  .donut-center .label { font-size: 12px; color: var(--text-muted); }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* ── Widget 2: KPI Row ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .kpi-card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 14px 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  .kpi-card.visible {
+    animation: widgetIn .55s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi-card:nth-child(1)::before { background: var(--teal); }
+  .kpi-card:nth-child(2)::before { background: var(--purple); }
+  .kpi-card:nth-child(3)::before { background: var(--green); }
+  .kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-value { font-size: 28px; font-weight: 800; margin: 4px 0 2px; }
+  .kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+  .kpi-badge.up { background: var(--green-light); color: #16a34a; }
+  .kpi-sparkline { margin-top: 6px; }
+  .kpi-sparkline svg { width: 100%; height: 32px; }
+  .kpi-minibar { display: flex; gap: 4px; justify-content: center; margin-top: 6px; height: 32px; align-items: flex-end; }
+  .kpi-minibar .bar {
+    width: 14px;
+    border-radius: 3px 3px 0 0;
+    transform-origin: bottom;
+    transform: scaleY(0);
+  }
+  .kpi-minibar .bar.animate { animation: growBar .6s ease-out forwards; }
+  @keyframes growBar {
+    to { transform: scaleY(1); }
+  }
+  .kpi-arc { margin-top: 4px; }
+  .kpi-arc svg { width: 64px; height: 36px; }
+
+  /* ── Widget 3: Heatmap ── */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: 90px repeat(7, 1fr);
+    gap: 3px;
+    font-size: 11px;
+  }
+  .hm-header {
+    font-weight: 700;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 4px 0;
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+  .hm-row-label {
+    font-weight: 600;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    color: var(--text);
+  }
+  .hm-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text);
+    transition: none;
+    opacity: 0;
+  }
+  .hm-cell.visible {
+    animation: cellPop .3s ease forwards;
+  }
+  @keyframes cellPop {
+    from { opacity: 0; transform: scale(.7); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .hm-cell.today {
+    outline: 2px solid var(--teal);
+    outline-offset: -1px;
+  }
+  .hm-total {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    font-weight: 600;
+  }
+
+  /* ── Widget 4: Deals ── */
+  .deal-card {
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .deal-card:last-child { border-bottom: none; padding-bottom: 0; }
+  .deal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+  .deal-name { font-weight: 700; font-size: 14px; }
+  .deal-sub { font-size: 12px; color: var(--text-muted); }
+  .deal-amount { font-weight: 800; font-size: 15px; color: var(--text); }
+  .deal-progress-track {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    margin: 8px 0;
+    overflow: hidden;
+  }
+  .deal-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    width: 0%;
+    transition: width 1s ease-out, background .5s;
+  }
+  .deal-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .tag-stage { background: #e0f2fe; color: #0284c7; }
+  .tag-warning { background: var(--orange-light); color: #c2410c; }
+  .tag-good { background: var(--green-light); color: #16a34a; }
+  .tag-new { background: var(--purple-light); color: #6d28d9; }
+  .tag-signal { background: #fef3c7; color: #b45309; }
+
+  /* ── Widget 5: AI Chat ── */
+  .ai-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .chat-msg {
+    max-width: 92%;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 10px 14px;
+    border-radius: 16px;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .chat-msg.visible {
+    animation: msgIn .4s ease forwards;
+  }
+  @keyframes msgIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .chat-msg.agent {
+    background: #f1f5f9;
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+  }
+  .chat-msg.user {
+    background: var(--teal);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    align-self: flex-end;
+  }
+  .quick-replies {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .quick-replies.visible {
+    animation: msgIn .35s ease forwards;
+  }
+  .qr-pill {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: #fff;
+    border: 1.5px solid var(--teal);
+    color: var(--teal-dark);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .qr-pill:hover { background: var(--teal); color: #fff; }
+  .qr-pill.tapped {
+    background: var(--teal);
+    color: #fff;
+    transform: scale(.95);
+    pointer-events: none;
+  }
+  .call-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--teal);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav {
+    flex-shrink: 0;
+    height: 82px;
+    background: var(--card-bg);
+    border-top: 1px solid #e2e8f0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: start;
+    padding-top: 10px;
+    z-index: 40;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color .2s;
+  }
+  .nav-item.active { color: var(--teal); }
+  .nav-item svg { width: 24px; height: 24px; }
+  .nav-item.active svg { fill: var(--teal); }
+  .nav-item:not(.active) svg { fill: #94a3b8; }
+
+  /* ── Step Controls ── */
+  .step-controls{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;z-index:9998;background:rgba(30,41,59,0.95);padding:10px 24px;border-radius:30px;box-shadow:0 4px 20px rgba(0,0,0,0.3);backdrop-filter:blur(8px);flex-wrap:wrap;justify-content:center}
+  .step-controls button{background:#15cbc5;color:#fff;border:none;padding:8px 24px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s}
+  .step-controls button:hover{background:#0ea5a0}
+  #stepCounter{color:rgba(255,255,255,0.7);font-size:13px;font-weight:300;min-width:120px}
+  .step-note{width:100%;text-align:center;color:rgba(255,255,255,0.5);font-size:12px;font-style:italic;line-height:1.3;margin-top:2px}
+
+  /* ── Voice FAB ── */
+  .voice-fab{position:fixed;bottom:20px;left:20px;z-index:9998;cursor:pointer}
+  .voice-fab-icon{width:48px;height:48px;border-radius:50%;background:#15cbc5;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(21,203,197,0.4);transition:transform 0.2s}
+  .voice-fab:hover .voice-fab-icon{transform:scale(1.1)}
+  .voice-fab-tooltip{position:absolute;bottom:56px;left:0;background:#1e293b;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+  .voice-fab.open .voice-fab-tooltip{opacity:1;pointer-events:auto}
+
+  /* ── Responsive ── */
+  @media (max-width: 420px) {
+    .phone-frame {
+      width: 100%;
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .phone-notch { display: none; }
+    body { padding: 0; }
+    .step-controls { bottom: 20px; padding: 8px 16px; }
+    .voice-fab { bottom: 10px; left: 10px; }
+  }
+.svs-global-header{position:fixed;top:0;left:0;right:0;height:36px;background:#1a1a1a;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:9999;font-family:system-ui,-apple-system,sans-serif}
+.svs-global-header .svs-logo-dots{display:flex;gap:4px;margin-right:8px}
+.svs-global-header .svs-logo-dots span{width:8px;height:8px;border-radius:50%;background:#c8a961}
+.svs-global-header .svs-left{display:flex;align-items:center}
+.svs-global-header .svs-brand-text{color:#fff;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+.svs-global-header .svs-right{color:#15cbc5;font-size:11px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="svs-global-header"><div class="svs-left"><div class="svs-logo-dots"><span></span><span></span><span></span><span></span></div><span class="svs-brand-text">Svensk Ventilationsservice</span></div><div class="svs-right">AI-First CRM</div></div>
+
+<!-- Phone Frame -->
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">09:42</span>
+    <div class="icons">
+      <svg viewBox="0 0 16 16"><rect x="1" y="11" width="2.5" height="4" rx="1"/><rect x="5" y="8" width="2.5" height="7" rx="1"/><rect x="9" y="5" width="2.5" height="10" rx="1"/><rect x="13" y="1" width="2.5" height="14" rx="1"/></svg>
+      <svg viewBox="0 0 16 16"><path d="M8 12.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM3.5 9.5a6.5 6.5 0 019 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M1 6.5a10 10 0 0114 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 20 16"><rect x="1" y="3" width="15" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="5" width="10" height="6" rx="1"/><rect x="17" y="6" width="2" height="4" rx="1"/></svg>
+    </div>
+  </div>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <span class="greeting"><span class="svs-m"><span class="svs-d"></span><span class="svs-d"></span><span class="svs-d"></span><span class="svs-d"></span></span> Hej Anna &#x1F44B;</span>
+      <div class="bell-wrap">
+        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 00-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <span class="bell-badge">3</span>
+      </div>
+    </div>
+    <div class="ai-ribbon">&#x1F4A1; 2 affärer behöver uppföljning idag</div>
+  </div>
+
+  <!-- Dashboard Scroll Area -->
+  <div class="dashboard-scroll" id="dashScroll">
+
+    <!-- Widget 1: Pipeline Donut -->
+    <div class="widget" id="w1">
+      <div class="widget-title">Pipeline-fördelning</div>
+      <div class="donut-wrap">
+        <div class="donut-container">
+          <svg viewBox="0 0 200 200" id="donutSvg">
+            <!-- Donut segments drawn by JS -->
+          </svg>
+          <div class="donut-center">
+            <span class="value">2.5 Mkr</span>
+            <span class="label">Totalt pipeline</span>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#b2f0ee"></span>Ny 15%</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#15cbc5"></span>Offert 30%</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#7B61FF"></span>Förhandling 35%</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>Vunnen 20%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget 2: KPI Row -->
+    <div class="kpi-row" id="w2">
+      <!-- Card A -->
+      <div class="kpi-card" id="kpi-a">
+        <div class="kpi-label">Nya</div>
+        <div class="kpi-value">5</div>
+        <span class="kpi-badge up">&#9650; 2</span>
+        <div class="kpi-sparkline">
+          <svg viewBox="0 0 80 32" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#15cbc5" stop-opacity=".25"/>
+                <stop offset="100%" stop-color="#15cbc5" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <polygon id="sparkAfill" points="" fill="url(#sparkGrad)"/>
+            <polyline id="sparkA" points="" fill="none" stroke="#15cbc5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Card B -->
+      <div class="kpi-card" id="kpi-b">
+        <div class="kpi-label">Stängda</div>
+        <div class="kpi-value">7</div>
+        <div style="font-size:12px;color:var(--text-muted);font-weight:600">275k</div>
+        <div class="kpi-minibar">
+          <div class="bar" id="bar1" style="height:20px;background:var(--purple-light)"></div>
+          <div class="bar" id="bar2" style="height:28px;background:var(--purple)"></div>
+          <div class="bar" id="bar3" style="height:32px;background:var(--purple)"></div>
+        </div>
+      </div>
+      <!-- Card C -->
+      <div class="kpi-card" id="kpi-c">
+        <div class="kpi-label">Win rate</div>
+        <div class="kpi-value">78%</div>
+        <div class="kpi-arc">
+          <svg viewBox="0 0 64 36">
+            <path d="M6 34 A26 26 0 0 1 58 34" fill="none" stroke="#e2e8f0" stroke-width="5" stroke-linecap="round"/>
+            <path id="arcFill" d="M6 34 A26 26 0 0 1 58 34" fill="none" stroke="#15cbc5" stroke-width="5" stroke-linecap="round"
+              stroke-dasharray="82" stroke-dashoffset="82"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget 3: Heatmap -->
+    <div class="widget" id="w3">
+      <div class="widget-title">Din vecka &#x1F4C5;</div>
+      <div class="heatmap-grid" id="heatmap">
+        <!-- Header row -->
+        <div class="hm-header"></div>
+        <div class="hm-header">Mån</div>
+        <div class="hm-header">Tis</div>
+        <div class="hm-header">Ons</div>
+        <div class="hm-header">Tor</div>
+        <div class="hm-header">Fre</div>
+        <div class="hm-header">Lör</div>
+        <div class="hm-header" style="color:var(--teal);font-weight:800">Sön</div>
+        <!-- Rows injected by JS -->
+      </div>
+      <div class="hm-total">23 aktiviteter denna vecka</div>
+    </div>
+
+    <!-- Widget 4: Hot Deals -->
+    <div class="widget" id="w4">
+      <div class="widget-title">Heta affärer &#x1F525;</div>
+
+      <!-- Deal 1: Castellum -->
+      <div class="deal-card" id="deal-castellum">
+        <div class="deal-header">
+          <div>
+            <div class="deal-name">Castellum</div>
+            <div class="deal-sub">Energioptimering</div>
+          </div>
+          <div class="deal-amount">670k</div>
+        </div>
+        <div class="deal-progress-track">
+          <div class="deal-progress-fill" id="dp-cast" style="background:var(--teal)"></div>
+        </div>
+        <div class="deal-tags">
+          <span class="tag tag-stage">Förhandling</span>
+          <span class="tag tag-warning" id="cast-warning">&#x26A0;&#xFE0F; Inaktiv 5 dagar</span>
+          <span class="tag tag-good" id="cast-updated" style="display:none">&#x2705; Uppdaterad idag</span>
+        </div>
+      </div>
+
+      <!-- Deal 2: Nordea -->
+      <div class="deal-card">
+        <div class="deal-header">
+          <div>
+            <div class="deal-name">Nordea</div>
+            <div class="deal-sub">Ventilationsservice</div>
+          </div>
+          <div class="deal-amount">890k</div>
+        </div>
+        <div class="deal-progress-track">
+          <div class="deal-progress-fill" id="dp-nord" style="background:var(--purple)"></div>
+        </div>
+        <div class="deal-tags">
+          <span class="tag tag-stage">Offert skickad</span>
+        </div>
+      </div>
+
+      <!-- Deal 3: Vasakronan -->
+      <div class="deal-card">
+        <div class="deal-header">
+          <div>
+            <div class="deal-name">Vasakronan</div>
+            <div class="deal-sub">OVK-ramavtal</div>
+          </div>
+          <div class="deal-amount">450k</div>
+        </div>
+        <div class="deal-progress-track">
+          <div class="deal-progress-fill" id="dp-vasa" style="background:var(--purple-light)"></div>
+        </div>
+        <div class="deal-tags">
+          <span class="tag tag-new">Ny</span>
+          <span class="tag tag-signal">&#x2B50; Hög köpsignal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget 5: AI Chat -->
+    <div class="widget" id="w5">
+      <div class="widget-title">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="#15cbc5"><rect x="2" y="4" width="16" height="11" rx="3"/><polygon points="6,15 10,19 10,15"/><circle cx="7" cy="9.5" r="1.2" fill="#fff"/><circle cx="13" cy="9.5" r="1.2" fill="#fff"/></svg>
+        AI-assistent
+      </div>
+      <div class="ai-chat" id="aiChat">
+        <!-- Messages injected by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      Kunder
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      Affärer
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+      Chatt
+    </div>
+  </div>
+</div>
+
+<div class="step-controls">
+  <button id="btnNext" onclick="nextStep()">Nästa →</button>
+  <span id="stepCounter">Klicka för att börja</span>
+  <div id="stepNote" class="step-note"></div>
+</div>
+
+<div class="voice-fab" id="voiceFab" onclick="this.classList.toggle('open')">
+  <div class="voice-fab-icon">📞</div>
+  <div class="voice-fab-tooltip"><strong>Ring CRM-assistenten</strong><br>+46 8 123 45 67<br><span style="font-size:11px;opacity:0.7">Identifiera med BankID</span></div>
+</div>
+
+<script>
+(function() {
+  /* ── Helpers ── */
+  var $ = function(id) { return document.getElementById(id); };
+  var qsa = function(sel, ctx) { return (ctx || document).querySelectorAll(sel); };
+
+  var TOTAL_STEPS = 11;
+  var currentStep = 0;
+
+  /* ── Donut Data ── */
+  var donutData = [
+    { pct: 15, color: '#b2f0ee' },
+    { pct: 30, color: '#15cbc5' },
+    { pct: 35, color: '#7B61FF' },
+    { pct: 20, color: '#22c55e' }
+  ];
+  var R = 72;
+  var C = 2 * Math.PI * R;
+
+  function buildDonutSVG() {
+    var svg = $('donutSvg');
+    svg.innerHTML = '';
+    var cumulativePct = 0;
+    donutData.forEach(function(seg, i) {
+      var arc = (seg.pct / 100) * C;
+      var gap = C - arc;
+      var rotDeg = (cumulativePct / 100) * 360 - 90;
+      var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', '100');
+      circle.setAttribute('cy', '100');
+      circle.setAttribute('r', String(R));
+      circle.setAttribute('fill', 'none');
+      circle.setAttribute('stroke', seg.color);
+      circle.setAttribute('stroke-width', '28');
+      circle.setAttribute('stroke-dasharray', arc + ' ' + gap);
+      circle.setAttribute('stroke-dashoffset', String(arc));
+      circle.style.transformOrigin = '100px 100px';
+      circle.style.transform = 'rotate(' + rotDeg + 'deg)';
+      circle.id = 'dseg-' + i;
+      svg.appendChild(circle);
+      cumulativePct += seg.pct;
+    });
+  }
+
+  function animateDonut() {
+    donutData.forEach(function(seg, i) {
+      var el = $('dseg-' + i);
+      if (!el) return;
+      setTimeout(function() {
+        el.style.transition = 'stroke-dashoffset 0.8s ease-out';
+        el.style.strokeDashoffset = '0';
+      }, i * 200);
+    });
+  }
+
+  /* ── Sparkline ── */
+  var sparkPts = [24, 20, 22, 16, 18, 10, 8, 4];
+  function drawSparkline() {
+    var w = 80, h = 32, pad = 2;
+    var pts = sparkPts.map(function(v, i) {
+      var x = pad + (i / (sparkPts.length - 1)) * (w - pad * 2);
+      var y = pad + (v / 28) * (h - pad * 2);
+      return x + ',' + y;
+    });
+    $('sparkA').setAttribute('points', pts.join(' '));
+    $('sparkAfill').setAttribute('points', pad + ',' + h + ' ' + pts.join(' ') + ' ' + (w - pad) + ',' + h);
+  }
+  drawSparkline();
+
+  /* ── Win rate arc ── */
+  function animateArc() {
+    var arc = $('arcFill');
+    var target = 82 * (1 - 0.78);
+    arc.style.transition = 'stroke-dashoffset 1s ease-out';
+    arc.style.strokeDashoffset = String(target);
+  }
+
+  /* ── Heatmap ── */
+  var hmData = [
+    { label: 'Samtal',        vals: [3, 2, 1, 4, 2, 0, 1] },
+    { label: 'Möten',         vals: [1, 0, 2, 1, 1, 0, 0] },
+    { label: 'Offerter',      vals: [0, 1, 0, 1, 1, 0, 0] },
+    { label: 'Uppföljningar', vals: [1, 0, 1, 0, 2, 0, 0] }
+  ];
+  var todayCol = 6;
+
+  function heatColor(v) {
+    if (v === 0) return '#f8fafc';
+    if (v <= 1) return '#ccfbf1';
+    if (v <= 2) return '#5eead4';
+    return '#0d9488';
+  }
+  function heatText(v) { return v >= 3 ? '#fff' : '#1e293b'; }
+
+  function buildHeatmap() {
+    var grid = $('heatmap');
+    var old = qsa('.hm-row-label, .hm-cell', grid);
+    for (var k = 0; k < old.length; k++) old[k].remove();
+
+    hmData.forEach(function(row) {
+      var label = document.createElement('div');
+      label.className = 'hm-row-label';
+      label.textContent = row.label;
+      grid.appendChild(label);
+
+      row.vals.forEach(function(v, ci) {
+        var cell = document.createElement('div');
+        cell.className = 'hm-cell' + (ci === todayCol ? ' today' : '');
+        cell.style.background = heatColor(v);
+        cell.style.color = heatText(v);
+        cell.textContent = v;
+        grid.appendChild(cell);
+      });
+    });
+  }
+  buildHeatmap();
+
+  /* ── Deal progress ── */
+  function animateDeals() {
+    $('dp-cast').style.width = '75%';
+    $('dp-nord').style.width = '50%';
+    $('dp-vasa').style.width = '25%';
+  }
+
+  /* ── Build chat DOM (all hidden initially) ── */
+  var chatElements = [
+    { type: 'agent',   text: 'Castellum har inte haft kontakt p\u00e5 5 dagar. Vill du ringa Erik?', id: 'cmsg-0' },
+    { type: 'replies', pills: [
+        { text: '&#x1F4DE; Ring nu', id: 'pill-ring' },
+        { text: '&#x23F0; P\u00e5minn imorgon', id: 'pill-remind' }
+      ], id: 'cmsg-1' },
+    { type: 'agent',   text: 'Erik Johansson: <span class="call-btn">&#x1F4DE; 070-234 5678</span>', id: 'cmsg-3' },
+    { type: 'agent',   text: 'Fick du tag p\u00e5 Erik? Hur gick samtalet?', id: 'cmsg-4' },
+    { type: 'replies', pills: [
+        { text: 'Ja, positivt', id: 'pill-pos' },
+        { text: 'Nej, inget svar', id: 'pill-neg' }
+      ], id: 'cmsg-5' },
+    { type: 'agent',   text: 'Toppen! Fick du n\u00e5gra k\u00f6psignaler?', id: 'cmsg-7' },
+    { type: 'replies', pills: [
+        { text: '&#x2705; Ja, starka', id: 'pill-strong' },
+        { text: '&#x1F937; Oklart', id: 'pill-unclear' },
+        { text: '&#x274C; Nej', id: 'pill-nosig' }
+      ], id: 'cmsg-8' },
+    { type: 'agent',   text: '&#x2728; Uppdaterat! Sannolikhet h\u00f6jd till 90%.', id: 'cmsg-10' }
+  ];
+
+  function buildChat() {
+    var chat = $('aiChat');
+    chat.innerHTML = '';
+    chatElements.forEach(function(msg) {
+      if (msg.type === 'agent') {
+        var div = document.createElement('div');
+        div.className = 'chat-msg agent';
+        div.innerHTML = msg.text;
+        div.id = msg.id;
+        chat.appendChild(div);
+      } else if (msg.type === 'replies') {
+        var wrap = document.createElement('div');
+        wrap.className = 'quick-replies';
+        wrap.id = msg.id;
+        msg.pills.forEach(function(p) {
+          var pill = document.createElement('span');
+          pill.className = 'qr-pill';
+          pill.innerHTML = p.text;
+          pill.id = p.id;
+          wrap.appendChild(pill);
+        });
+        chat.appendChild(wrap);
+      }
+    });
+  }
+
+  /* ── Helper: simulate pill tap ── */
+  function tapPill(pillId) {
+    var pill = $(pillId);
+    if (!pill) return;
+    pill.classList.add('tapped');
+    setTimeout(function() {
+      var userMsg = document.createElement('div');
+      userMsg.className = 'chat-msg user visible';
+      userMsg.innerHTML = pill.innerHTML;
+      pill.parentElement.style.display = 'none';
+      pill.parentElement.after(userMsg);
+      setTimeout(function() {
+        userMsg.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 50);
+    }, 200);
+  }
+
+  /* ── Helper: show chat element ── */
+  function showChatMsg(id) {
+    var el = $(id);
+    if (el) {
+      el.classList.add('visible');
+      setTimeout(function() {
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 50);
+    }
+  }
+
+  /* ── Helper: update Castellum deal card ── */
+  function updateCastellum() {
+    var warning = $('cast-warning');
+    var updated = $('cast-updated');
+    var bar = $('dp-cast');
+    if (warning) warning.style.display = 'none';
+    if (updated) updated.style.display = 'inline-flex';
+    if (bar) {
+      bar.style.transition = 'width 1s ease-out, background 0.5s';
+      bar.style.width = '90%';
+      bar.style.background = '#22c55e';
+    }
+  }
+
+  /* ── Step definitions (1-indexed for display, 0-indexed in array) ── */
+  var stepLabels = [
+    'Pipeline-donut',
+    'KPI-kort',
+    'Vecko-heatmap',
+    'Heta aff\u00e4rer',
+    'AI-assistenten startar',
+    'Anv\u00e4ndaren trycker "Ring nu"',
+    'Agenten visar telefonnummer',
+    'Agenten fr\u00e5gar hur samtalet gick',
+    'Anv\u00e4ndaren svarar positivt',
+    'Agenten fr\u00e5gar om k\u00f6psignaler',
+    'Anv\u00e4ndaren bekr\u00e4ftar \u2013 aff\u00e4r uppdateras'
+  ];
+
+  var stepActions = [
+    /* Step 1: Pipeline donut appears */
+    function() {
+      $('w1').classList.add('visible');
+      setTimeout(animateDonut, 300);
+    },
+    /* Step 2: KPI row cards appear */
+    function() {
+      $('kpi-a').classList.add('visible');
+      setTimeout(function() {
+        $('kpi-b').classList.add('visible');
+        setTimeout(function() {
+          ['bar1','bar2','bar3'].forEach(function(id, i) {
+            setTimeout(function() {
+              $(id).style.transform = '';
+              $(id).classList.add('animate');
+            }, i * 150);
+          });
+        }, 200);
+      }, 300);
+      setTimeout(function() {
+        $('kpi-c').classList.add('visible');
+        setTimeout(animateArc, 200);
+      }, 600);
+    },
+    /* Step 3: Weekly heatmap appears */
+    function() {
+      $('w3').classList.add('visible');
+      var hmCells = qsa('.hm-cell', $('heatmap'));
+      for (var i = 0; i < hmCells.length; i++) {
+        (function(idx, cell) {
+          setTimeout(function() { cell.classList.add('visible'); }, 100 + idx * 40);
+        })(i, hmCells[i]);
+      }
+    },
+    /* Step 4: Hot deals list appears */
+    function() {
+      $('w4').classList.add('visible');
+      setTimeout(function() {
+        ['dp-cast','dp-nord','dp-vasa'].forEach(function(id) {
+          $(id).style.transition = 'width 1s ease-out';
+        });
+        animateDeals();
+      }, 300);
+    },
+    /* Step 5: AI assistant starts conversation */
+    function() {
+      $('w5').classList.add('visible');
+      setTimeout(function() {
+        showChatMsg('cmsg-0');
+        setTimeout(function() { showChatMsg('cmsg-1'); }, 400);
+      }, 300);
+    },
+    /* Step 6: User taps "Ring nu" */
+    function() {
+      tapPill('pill-ring');
+    },
+    /* Step 7: Agent shows phone number */
+    function() {
+      showChatMsg('cmsg-3');
+    },
+    /* Step 8: Agent asks "Hur gick samtalet?" */
+    function() {
+      showChatMsg('cmsg-4');
+      setTimeout(function() { showChatMsg('cmsg-5'); }, 400);
+    },
+    /* Step 9: User responds positively */
+    function() {
+      tapPill('pill-pos');
+    },
+    /* Step 10: Agent asks about kopsignaler */
+    function() {
+      showChatMsg('cmsg-7');
+      setTimeout(function() { showChatMsg('cmsg-8'); }, 400);
+    },
+    /* Step 11: User confirms strong signals, deal updates */
+    function() {
+      tapPill('pill-strong');
+      setTimeout(function() {
+        showChatMsg('cmsg-10');
+        setTimeout(updateCastellum, 200);
+      }, 500);
+    }
+  ];
+
+  /* ── Step notes ── */
+  var stepNotes = [
+    "Pipeline-donut visar f\u00f6rdelning per fas",
+    "KPI-kort: nya aff\u00e4rer, st\u00e4ngda och win rate",
+    "Veckoaktivitet som heatmap \u2014 dagens kolumn markerad",
+    "Heta aff\u00e4rer med progressbarer och varningsflaggor",
+    "AI-assistenten f\u00f6resl\u00e5r att ringa en inaktiv kund",
+    "Anv\u00e4ndaren trycker 'Ring nu'",
+    "Telefonnummer visas \u2014 redo att ringa",
+    "AI:n fr\u00e5gar hur samtalet gick",
+    "Positivt svar fr\u00e5n anv\u00e4ndaren",
+    "AI:n fr\u00e5gar specifikt om k\u00f6psignaler",
+    "Aff\u00e4rskortets sannolikhet uppdateras live fr\u00e5n 75% till 90%"
+  ];
+
+  /* ── UI update ── */
+  function updateStepUI() {
+    var counter = $('stepCounter');
+    var btn = $('btnNext');
+    if (currentStep === 0) {
+      counter.textContent = 'Klicka f\u00f6r att b\u00f6rja';
+      btn.textContent = 'N\u00e4sta \u2192';
+      document.getElementById('stepNote').textContent = '';
+    } else if (currentStep >= TOTAL_STEPS) {
+      counter.textContent = 'Steg ' + TOTAL_STEPS + ' / ' + TOTAL_STEPS + ' \u2014 Klar!';
+      btn.textContent = '\u21BA Starta om';
+      document.getElementById('stepNote').textContent = stepNotes[currentStep - 1] || '';
+    } else {
+      counter.textContent = 'Steg ' + currentStep + ' / ' + TOTAL_STEPS + ' \u2014 ' + stepLabels[currentStep - 1];
+      btn.textContent = 'N\u00e4sta \u2192';
+      document.getElementById('stepNote').textContent = stepNotes[currentStep - 1] || '';
+    }
+  }
+
+  /* ── Reset everything ── */
+  function resetAll() {
+    currentStep = 0;
+
+    /* Reset widgets */
+    var widgets = qsa('.widget');
+    for (var w = 0; w < widgets.length; w++) widgets[w].classList.remove('visible');
+    var kpis = qsa('.kpi-card');
+    for (var k = 0; k < kpis.length; k++) kpis[k].classList.remove('visible');
+    var cells = qsa('.hm-cell');
+    for (var c = 0; c < cells.length; c++) cells[c].classList.remove('visible');
+
+    /* Reset donut */
+    buildDonutSVG();
+
+    /* Reset KPI bars */
+    ['bar1','bar2','bar3'].forEach(function(id) {
+      var el = $(id);
+      el.classList.remove('animate');
+      el.style.transform = 'scaleY(0)';
+    });
+
+    /* Reset arc */
+    var arcEl = $('arcFill');
+    arcEl.style.transition = 'none';
+    arcEl.style.strokeDashoffset = '82';
+
+    /* Reset deal bars */
+    ['dp-cast','dp-nord','dp-vasa'].forEach(function(id) {
+      var el = $(id);
+      el.style.transition = 'none';
+      el.style.width = '0%';
+    });
+    $('dp-cast').style.background = 'var(--teal)';
+    $('dp-nord').style.background = 'var(--purple)';
+    $('dp-vasa').style.background = 'var(--purple-light)';
+
+    /* Reset Castellum tags */
+    $('cast-warning').style.display = 'inline-flex';
+    $('cast-updated').style.display = 'none';
+
+    /* Rebuild chat */
+    buildChat();
+
+    /* Scroll to top */
+    $('dashScroll').scrollTop = 0;
+
+    updateStepUI();
+  }
+
+  /* ── Advance one step ── */
+  function nextStep() {
+    if (currentStep >= TOTAL_STEPS) {
+      resetAll();
+      return;
+    }
+    stepActions[currentStep]();
+    currentStep++;
+    updateStepUI();
+  }
+
+  /* ── Keyboard shortcuts ── */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      nextStep();
+    } else if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      resetAll();
+    }
+  });
+
+  /* ── Init ── */
+  buildChat();
+  buildDonutSVG();
+  updateStepUI();
+
+  /* Expose for onclick */
+  window.nextStep = nextStep;
+})();
+</script>
+</body>
+</html>

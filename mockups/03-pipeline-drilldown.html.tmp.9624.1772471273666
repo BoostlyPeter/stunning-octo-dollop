@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline-analys — SvenskVent CRM</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #15cbc5;
+    --teal-dark: #0ea5a0;
+    --teal-light: #d1faf8;
+    --purple: #7B61FF;
+    --purple-light: #ede8ff;
+    --bg: #f8fafc;
+    --card-bg: #fff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --border: #e2e8f0;
+    --green: #22c55e;
+    --green-bg: #dcfce7;
+    --red: #ef4444;
+    --red-bg: #fee2e2;
+    --chat-bg: #f8fafc;
+    --chat-bubble-agent: #e8edf2;
+    --chat-bubble-user: var(--teal);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,.1), 0 4px 10px rgba(0,0,0,.05);
+    --shadow-glow: 0 0 20px rgba(21,203,197,.25), 0 0 40px rgba(21,203,197,.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: system-ui, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-top: 36px;
+  }
+
+  /* ── Top bar ────────────────────────────── */
+  .topbar {
+    background: var(--text);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    height: 52px;
+    position: fixed;
+    top: 36px; left: 0; right: 0;
+    z-index: 100;
+    gap: 16px;
+  }
+  .svs-dots{display:inline-flex;gap:3px;background:#1a1a1a;padding:3px 5px;border-radius:2px;vertical-align:middle;margin-right:6px}
+  .svs-dots span{width:8px;height:8px;border-radius:50%;background:#c8a961}
+  .topbar-logo {
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
+    letter-spacing: 0.12em;
+  }
+  .topbar-sep { color: #475569; }
+  .topbar-title { font-size: 14px; color: #cbd5e1; font-weight: 500; }
+  .topbar-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+  .topbar-badge {
+    background: var(--teal);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .topbar-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+  }
+
+  /* ── Dashboard grid ─────────────────────── */
+  .dashboard {
+    padding: 72px 24px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding-right: 40px;
+  }
+  @media (max-width: 1024px) {
+    .dashboard { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .dashboard { grid-template-columns: 1fr; padding: 64px 12px 12px; }
+  }
+
+  /* ── Cards ──────────────────────────────── */
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    padding: 20px;
+    opacity: 0;
+    transform: translateY(24px) scale(.97);
+    transition: opacity .5s ease, transform .5s ease, box-shadow .3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .card:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .card-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .card-icon.teal { background: var(--teal-light); }
+  .card-icon.purple { background: var(--purple-light); }
+  .card-icon.green { background: var(--green-bg); }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .card-span2 { grid-column: span 2; }
+  .card-span3 { grid-column: span 3; }
+  @media (max-width: 1024px) {
+    .card-span3 { grid-column: span 2; }
+  }
+  @media (max-width: 640px) {
+    .card-span2, .card-span3 { grid-column: span 1; }
+  }
+
+  .big-number {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .big-subtitle {
+    font-size: 13px;
+    color: var(--green);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .big-subtitle.neutral { color: var(--text-muted); }
+
+  /* ── Placeholder cards (empty outlines) ── */
+  .placeholder-card {
+    background: transparent;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .placeholder-card.visible { opacity: 1; transform: translateY(0); }
+  .placeholder-card.hidden { display: none; }
+  .placeholder-label {
+    font-size: 13px;
+    color: var(--text-light);
+    text-align: center;
+  }
+
+  /* ── SVG chart helpers ──────────────────── */
+  .chart-svg { width: 100%; display: block; }
+
+  /* Funnel animation */
+  .funnel-stage {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  .funnel-stage.animate {
+    animation: funnel-in .5s ease forwards;
+  }
+  @keyframes funnel-in {
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Bar grow animation */
+  .bar-grow {
+    transform-origin: bottom;
+    transform: scaleY(0);
+  }
+  .bar-grow.animate {
+    animation: bar-in .6s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes bar-in {
+    to { transform: scaleY(1); }
+  }
+
+  /* Horizontal bar grow */
+  .hbar-grow {
+    transform-origin: left;
+    transform: scaleX(0);
+  }
+  .hbar-grow.animate {
+    animation: hbar-in .7s cubic-bezier(.25,.46,.45,.94) forwards;
+  }
+  @keyframes hbar-in {
+    to { transform: scaleX(1); }
+  }
+
+  /* Line draw animation */
+  .line-draw {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+  .line-draw.animate {
+    animation: draw-line 1.2s ease forwards;
+  }
+  @keyframes draw-line {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Area fade */
+  .area-fade {
+    opacity: 0;
+  }
+  .area-fade.animate {
+    animation: fade-in .8s ease .4s forwards;
+  }
+
+  /* Donut animation */
+  .donut-segment {
+    stroke-dashoffset: var(--dash-full);
+    transition: stroke-dashoffset 1s ease;
+  }
+  .donut-segment.animate {
+    stroke-dashoffset: var(--dash-target);
+  }
+
+  /* Sparkline */
+  .sparkline-draw {
+    stroke-dasharray: 500;
+    stroke-dashoffset: 500;
+  }
+  .sparkline-draw.animate {
+    animation: draw-line .8s ease forwards;
+  }
+  .spark-area-fade { opacity: 0; }
+  .spark-area-fade.animate { animation: fade-in .6s ease .3s forwards; }
+
+  @keyframes fade-in {
+    to { opacity: 1; }
+  }
+
+  /* ── Badge ──────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .badge.green { background: var(--green-bg); color: #16a34a; }
+  .badge.red { background: var(--red-bg); color: var(--red); }
+
+  /* ── Legend ─────────────────────────────── */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  /* ── Insight card glow ──────────────────── */
+  .card.insight {
+    border: 2px solid var(--teal);
+    box-shadow: var(--shadow-glow);
+  }
+  .card.insight:hover {
+    box-shadow: var(--shadow-glow), var(--shadow-md);
+  }
+  .insight-rec {
+    background: var(--teal-light);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--teal-dark);
+    font-weight: 500;
+  }
+  .insight-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background .2s, transform .1s;
+  }
+  .insight-btn:hover { background: var(--teal-dark); }
+  .insight-btn:active { transform: scale(.97); }
+  .insight-btn.success {
+    background: var(--green);
+    pointer-events: none;
+  }
+
+  /* ── Salesperson avatars ────────────────── */
+  .sp-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .sp-row:last-child { margin-bottom: 0; }
+  .sp-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .sp-name {
+    width: 110px;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .sp-bar-container {
+    flex: 1;
+    height: 26px;
+    display: flex;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .sp-bar-seg {
+    height: 100%;
+    transform-origin: left;
+    transform: scaleX(0);
+  }
+  .sp-bar-seg.animate {
+    animation: hbar-in .7s cubic-bezier(.25,.46,.45,.94) forwards;
+  }
+  .sp-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    width: 60px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── Floating chat widget ───────────────── */
+  .chat-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .2s, background .2s;
+  }
+  .chat-fab:hover { transform: scale(1.08); }
+  .chat-fab svg { width: 24px; height: 24px; }
+  .chat-fab.hidden { display: none; }
+
+  .chat-panel {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 350px;
+    height: 420px;
+    background: var(--chat-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px) scale(.95);
+    pointer-events: none;
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .chat-panel.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: all;
+  }
+
+  .chat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .chat-head-left {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .chat-head-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+  .chat-head-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .chat-head-sub {
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .chat-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+    line-height: 1;
+    transition: color .2s;
+  }
+  .chat-close:hover { color: #fff; }
+
+  .chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 14px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chat-body::-webkit-scrollbar { width: 4px; }
+  .chat-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+  .chat-msg {
+    max-width: 82%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .3s ease, transform .3s ease;
+    word-wrap: break-word;
+  }
+  .chat-msg.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .chat-msg.agent {
+    background: var(--chat-bubble-agent);
+    color: #e2e8f0;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .chat-msg.user {
+    background: var(--teal);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+
+  .chat-footer {
+    padding: 10px 14px;
+    border-top: 1px solid #334155;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chat-typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 8px 14px;
+    align-self: flex-start;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .chat-typing.visible { opacity: 1; }
+  .chat-typing span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #64748b;
+    animation: typing-bounce .8s ease infinite;
+  }
+  .chat-typing span:nth-child(2) { animation-delay: .15s; }
+  .chat-typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-4px); }
+  }
+
+  /* ── Bar chart labels ──────────────────── */
+  .chart-label {
+    font-size: 11px;
+    fill: var(--text-muted);
+    font-family: system-ui, 'Segoe UI', sans-serif;
+  }
+  .chart-value {
+    font-size: 11px;
+    fill: var(--text);
+    font-weight: 600;
+    font-family: system-ui, 'Segoe UI', sans-serif;
+  }
+  .chart-grid {
+    stroke: #e2e8f0;
+    stroke-width: 1;
+  }
+
+  /* ── Funnel labels ─────────────────────── */
+  .funnel-label {
+    font-size: 12px;
+    fill: #fff;
+    font-weight: 600;
+    font-family: system-ui, 'Segoe UI', sans-serif;
+  }
+  .funnel-detail {
+    font-size: 10px;
+    fill: rgba(255,255,255,.8);
+    font-family: system-ui, 'Segoe UI', sans-serif;
+  }
+  .funnel-pct {
+    font-size: 11px;
+    fill: var(--text-muted);
+    font-weight: 600;
+    font-family: system-ui, 'Segoe UI', sans-serif;
+  }
+
+  /* ── Insight comparison ─────────────────── */
+  .insight-compare {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  .insight-group { flex: 1; }
+  .insight-group-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .insight-group-val {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .insight-group-val.good { color: var(--green); }
+
+  /* ── Responsive chat ────────────────────── */
+  @media (max-width: 640px) {
+    .chat-panel { width: calc(100vw - 24px); right: 12px; bottom: 12px; }
+    .chat-fab { bottom: 12px; right: 12px; }
+  }
+.svs-global-header{position:fixed;top:0;left:0;right:0;height:36px;background:#1a1a1a;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:9999;font-family:system-ui,-apple-system,sans-serif}
+.svs-global-header .svs-logo-dots{display:flex;gap:4px;margin-right:8px}
+.svs-global-header .svs-logo-dots span{width:8px;height:8px;border-radius:50%;background:#c8a961}
+.svs-global-header .svs-left{display:flex;align-items:center}
+.svs-global-header .svs-brand-text{color:#fff;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+.svs-global-header .svs-right{color:#15cbc5;font-size:11px;font-weight:700}
+
+  /* ── Step controls ──────────────────────── */
+  .step-controls{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;z-index:9998;background:rgba(30,41,59,0.95);padding:10px 24px;border-radius:30px;box-shadow:0 4px 20px rgba(0,0,0,0.3);backdrop-filter:blur(8px);flex-wrap:wrap;justify-content:center}
+  .step-controls button{background:#15cbc5;color:#fff;border:none;padding:8px 24px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s}
+  .step-controls button:hover{background:#0ea5a0}
+  #stepCounter{color:rgba(255,255,255,0.7);font-size:13px;font-weight:300;min-width:120px}
+  .step-note{width:100%;text-align:center;color:rgba(255,255,255,0.5);font-size:12px;font-style:italic;line-height:1.3;margin-top:2px}
+
+  /* ── Voice FAB ──────────────────────────── */
+  .voice-fab{position:fixed;bottom:20px;left:20px;z-index:9998;cursor:pointer}
+  .voice-fab-icon{width:48px;height:48px;border-radius:50%;background:#15cbc5;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(21,203,197,0.4);transition:transform 0.2s}
+  .voice-fab:hover .voice-fab-icon{transform:scale(1.1)}
+  .voice-fab-tooltip{position:absolute;bottom:56px;left:0;background:#1e293b;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+  .voice-fab.open .voice-fab-tooltip{opacity:1;pointer-events:auto}
+</style>
+</head>
+<body>
+<div class="svs-global-header"><div class="svs-left"><div class="svs-logo-dots"><span></span><span></span><span></span><span></span></div><span class="svs-brand-text">Svensk Ventilationsservice</span></div><div class="svs-right">AI-First CRM</div></div>
+
+<!-- Top bar -->
+<div class="topbar">
+  <span class="topbar-logo"><span class="svs-dots"><span></span><span></span><span></span><span></span></span> SVENSK VENTILATIONSSERVICE</span>
+  <span class="topbar-sep">|</span>
+  <span class="topbar-title">Pipeline-analys</span>
+  <div class="topbar-right">
+    <span class="topbar-badge">AI-assistent aktiv</span>
+    <div class="topbar-avatar">AL</div>
+  </div>
+</div>
+
+<!-- Dashboard grid -->
+<div class="dashboard" id="dashboard">
+
+  <!-- Row 1 placeholders (replaced by real cards) -->
+  <div class="placeholder-card visible" id="ph1"><span class="placeholder-label">Diagram laddas...</span></div>
+  <div class="placeholder-card visible" id="ph2"><span class="placeholder-label">Diagram laddas...</span></div>
+  <div class="placeholder-card visible" id="ph3"><span class="placeholder-label">Diagram laddas...</span></div>
+
+  <!-- Row 2 placeholders -->
+  <div class="placeholder-card visible" id="ph4"><span class="placeholder-label">V&auml;ntar p&aring; data...</span></div>
+  <div class="placeholder-card visible" id="ph5"><span class="placeholder-label">V&auml;ntar p&aring; data...</span></div>
+  <div class="placeholder-card visible" id="ph6"><span class="placeholder-label">V&auml;ntar p&aring; data...</span></div>
+
+  <!-- Row 3 placeholder -->
+  <div class="placeholder-card visible card-span3" id="ph7"><span class="placeholder-label">V&auml;ntar p&aring; data...</span></div>
+
+  <!-- Row 4 placeholder -->
+  <div class="placeholder-card visible card-span2" id="ph8"><span class="placeholder-label">V&auml;ntar p&aring; data...</span></div>
+  <div class="placeholder-card visible" id="ph9"><span class="placeholder-label">V&auml;ntar p&aring; data...</span></div>
+
+  <!-- ====== REAL CARDS (hidden initially) ====== -->
+
+  <!-- Card 1: Pipeline funnel -->
+  <div class="card" id="card1">
+    <div class="card-header">
+      <div class="card-icon teal">&#x25B3;</div>
+      <span class="card-title">Pipeline-tratt</span>
+    </div>
+    <svg class="chart-svg" viewBox="0 0 300 220" id="funnelSvg">
+      <!-- Funnel trapezoids -->
+      <g class="funnel-stage" id="fs1">
+        <polygon points="10,10 290,10 265,55 35,55" fill="#5ee9e4"/>
+        <text x="150" y="32" text-anchor="middle" class="funnel-label">Ny</text>
+        <text x="150" y="47" text-anchor="middle" class="funnel-detail">5 aff&auml;rer &mdash; 1 200k</text>
+      </g>
+      <g class="funnel-stage" id="fs2">
+        <polygon points="35,62 265,62 240,107 60,107" fill="#15cbc5"/>
+        <text x="150" y="84" text-anchor="middle" class="funnel-label">Offert skickad</text>
+        <text x="150" y="99" text-anchor="middle" class="funnel-detail">4 aff&auml;rer &mdash; 980k</text>
+      </g>
+      <g class="funnel-stage" id="fs3">
+        <polygon points="60,114 240,114 215,159 85,159" fill="#0ea5a0"/>
+        <text x="150" y="136" text-anchor="middle" class="funnel-label">F&ouml;rhandling</text>
+        <text x="150" y="151" text-anchor="middle" class="funnel-detail">3 aff&auml;rer &mdash; 890k</text>
+      </g>
+      <g class="funnel-stage" id="fs4">
+        <polygon points="85,166 215,166 195,211 105,211" fill="#22c55e"/>
+        <text x="150" y="188" text-anchor="middle" class="funnel-label">Vunnen</text>
+        <text x="150" y="203" text-anchor="middle" class="funnel-detail">2 aff&auml;rer &mdash; 275k</text>
+      </g>
+      <!-- Conversion percentages -->
+      <text x="288" y="42" class="funnel-pct" text-anchor="end">80% &#x2193;</text>
+      <text x="263" y="94" class="funnel-pct" text-anchor="end">75% &#x2193;</text>
+      <text x="238" y="146" class="funnel-pct" text-anchor="end">67% &#x2193;</text>
+    </svg>
+  </div>
+
+  <!-- Card 2: Total pipeline value -->
+  <div class="card" id="card2">
+    <div class="card-header">
+      <div class="card-icon teal">&#x2B06;</div>
+      <span class="card-title">Totalt pipeline-v&auml;rde</span>
+    </div>
+    <div class="big-number">3 345 000 kr</div>
+    <div class="big-subtitle">&#x25B2; +12% vs f&ouml;rra m&aring;naden</div>
+    <svg class="chart-svg" viewBox="0 0 280 60" style="margin-top:16px;" id="sparkSvg">
+      <defs>
+        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#15cbc5" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#15cbc5" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <!-- area -->
+      <path class="spark-area-fade" id="sparkArea"
+        d="M10,45 Q33,42 56,40 Q79,38 102,35 Q125,32 148,38 Q171,25 194,22 Q217,18 240,15 Q258,12 270,10 L270,55 L10,55 Z"
+        fill="url(#sparkGrad)"/>
+      <!-- line -->
+      <path class="sparkline-draw" id="sparkLine"
+        d="M10,45 Q33,42 56,40 Q79,38 102,35 Q125,32 148,38 Q171,25 194,22 Q217,18 240,15 Q258,12 270,10"
+        fill="none" stroke="#15cbc5" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- current month dot -->
+      <circle id="sparkDot" cx="270" cy="10" r="4" fill="#15cbc5" opacity="0"/>
+      <!-- month labels -->
+      <text x="10" y="55" class="chart-label" font-size="9" opacity=".5">apr</text>
+      <text x="102" y="55" class="chart-label" font-size="9" opacity=".5">jul</text>
+      <text x="194" y="55" class="chart-label" font-size="9" opacity=".5">okt</text>
+      <text x="260" y="55" class="chart-label" font-size="9" opacity=".5">mar</text>
+    </svg>
+  </div>
+
+  <!-- Card 3: Average close time -->
+  <div class="card" id="card3">
+    <div class="card-header">
+      <div class="card-icon purple">&#x23F1;</div>
+      <span class="card-title">Genomsnittlig st&auml;ngningstid</span>
+    </div>
+    <div class="big-number">47 dagar</div>
+    <div class="big-subtitle neutral">Snitt &ouml;ver alla aff&auml;rstyper</div>
+    <svg class="chart-svg" viewBox="0 0 280 120" style="margin-top:14px;" id="closeSvg">
+      <!-- Grid -->
+      <line x1="100" y1="10" x2="275" y2="10" class="chart-grid" opacity=".3"/>
+      <line x1="100" y1="36" x2="275" y2="36" class="chart-grid" opacity=".3"/>
+      <line x1="100" y1="62" x2="275" y2="62" class="chart-grid" opacity=".3"/>
+      <line x1="100" y1="88" x2="275" y2="88" class="chart-grid" opacity=".3"/>
+      <!-- Labels -->
+      <text x="95" y="24" text-anchor="end" class="chart-label">OVK</text>
+      <text x="95" y="50" text-anchor="end" class="chart-label">Filteravtal</text>
+      <text x="95" y="76" text-anchor="end" class="chart-label">Renovering</text>
+      <text x="95" y="102" text-anchor="end" class="chart-label">Energiopt</text>
+      <!-- Bars -->
+      <rect class="hbar-grow" id="cb1" x="100" y="14" width="83" height="18" rx="3" fill="#7B61FF" opacity=".85"/>
+      <rect class="hbar-grow" id="cb2" x="100" y="40" width="73" height="18" rx="3" fill="#7B61FF" opacity=".85"/>
+      <rect class="hbar-grow" id="cb3" x="100" y="66" width="175" height="18" rx="3" fill="#7B61FF" opacity=".85"/>
+      <rect class="hbar-grow" id="cb4" x="100" y="92" width="151" height="18" rx="3" fill="#7B61FF" opacity=".85"/>
+      <!-- Values -->
+      <text class="chart-value" x="188" y="28" opacity="0" id="cv1">32 d</text>
+      <text class="chart-value" x="178" y="54" opacity="0" id="cv2">28 d</text>
+      <text class="chart-value" x="280" y="80" opacity="0" id="cv3" text-anchor="end">67 d</text>
+      <text class="chart-value" x="256" y="106" opacity="0" id="cv4">58 d</text>
+    </svg>
+  </div>
+
+  <!-- Card 4: Quarterly comparison -->
+  <div class="card" id="card4">
+    <div class="card-header">
+      <div class="card-icon teal">&#x2630;</div>
+      <span class="card-title">Kvartalsvy</span>
+      <span class="badge green" style="margin-left:auto;">&#x25B2; 40% fler vunna</span>
+    </div>
+    <svg class="chart-svg" viewBox="0 0 300 180" id="quartSvg">
+      <!-- Y-axis grid -->
+      <line x1="40" y1="20" x2="290" y2="20" class="chart-grid" opacity=".2"/>
+      <line x1="40" y1="55" x2="290" y2="55" class="chart-grid" opacity=".2"/>
+      <line x1="40" y1="90" x2="290" y2="90" class="chart-grid" opacity=".2"/>
+      <line x1="40" y1="125" x2="290" y2="125" class="chart-grid" opacity=".2"/>
+      <line x1="40" y1="155" x2="290" y2="155" class="chart-grid" opacity=".3"/>
+      <!-- Y labels -->
+      <text x="35" y="24" text-anchor="end" class="chart-label">12</text>
+      <text x="35" y="59" text-anchor="end" class="chart-label">9</text>
+      <text x="35" y="94" text-anchor="end" class="chart-label">6</text>
+      <text x="35" y="129" text-anchor="end" class="chart-label">3</text>
+      <text x="35" y="159" text-anchor="end" class="chart-label">0</text>
+      <!-- Group 1: Nya -->
+      <text x="100" y="173" text-anchor="middle" class="chart-label">Nya</text>
+      <rect class="bar-grow" id="qb1" x="72" y="65" width="24" height="90" rx="3" fill="#94a3b8"/>
+      <rect class="bar-grow" id="qb2" x="100" y="20" width="24" height="135" rx="3" fill="#15cbc5"/>
+      <!-- Group 2: Vunna -->
+      <text x="178" y="173" text-anchor="middle" class="chart-label">Vunna</text>
+      <rect class="bar-grow" id="qb3" x="150" y="90" width="24" height="65" rx="3" fill="#94a3b8"/>
+      <rect class="bar-grow" id="qb4" x="178" y="56" width="24" height="99" rx="3" fill="#15cbc5"/>
+      <!-- Group 3: Forlorade -->
+      <text x="255" y="173" text-anchor="middle" class="chart-label">F&ouml;rlorade</text>
+      <rect class="bar-grow" id="qb5" x="228" y="132" width="24" height="23" rx="3" fill="#94a3b8"/>
+      <rect class="bar-grow" id="qb6" x="256" y="143" width="24" height="12" rx="3" fill="#15cbc5"/>
+    </svg>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div>Q4 2025</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#15cbc5"></div>Q1 2026</div>
+    </div>
+  </div>
+
+  <!-- Card 5: Revenue trend line chart -->
+  <div class="card" id="card5">
+    <div class="card-header">
+      <div class="card-icon teal">&#x1F4C8;</div>
+      <span class="card-title">Int&auml;ktstrend</span>
+    </div>
+    <div class="legend" style="margin-top:0;margin-bottom:10px;">
+      <div class="legend-item"><div class="legend-dot" style="background:#15cbc5"></div>Vunna aff&auml;rer</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div>M&aring;l</div>
+    </div>
+    <svg class="chart-svg" viewBox="0 0 300 160" id="trendSvg">
+      <defs>
+        <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#15cbc5" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#15cbc5" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <!-- Grid -->
+      <line x1="40" y1="10" x2="280" y2="10" class="chart-grid" opacity=".15"/>
+      <line x1="40" y1="42" x2="280" y2="42" class="chart-grid" opacity=".15"/>
+      <line x1="40" y1="74" x2="280" y2="74" class="chart-grid" opacity=".15"/>
+      <line x1="40" y1="106" x2="280" y2="106" class="chart-grid" opacity=".15"/>
+      <line x1="40" y1="138" x2="280" y2="138" class="chart-grid" opacity=".2"/>
+      <!-- Y labels -->
+      <text x="35" y="14" text-anchor="end" class="chart-label">300k</text>
+      <text x="35" y="46" text-anchor="end" class="chart-label">250k</text>
+      <text x="35" y="78" text-anchor="end" class="chart-label">200k</text>
+      <text x="35" y="110" text-anchor="end" class="chart-label">150k</text>
+      <text x="35" y="142" text-anchor="end" class="chart-label">100k</text>
+      <!-- X labels (months) -->
+      <text x="56" y="152" text-anchor="middle" class="chart-label">okt</text>
+      <text x="104" y="152" text-anchor="middle" class="chart-label">nov</text>
+      <text x="152" y="152" text-anchor="middle" class="chart-label">dec</text>
+      <text x="200" y="152" text-anchor="middle" class="chart-label">jan</text>
+      <text x="248" y="152" text-anchor="middle" class="chart-label">feb</text>
+      <!-- Target line (dashed) -->
+      <line x1="40" y1="42" x2="280" y2="42" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6,4" opacity=".6"/>
+      <!-- Area under trend line -->
+      <path class="area-fade" id="trendArea"
+        d="M56,82 L104,66 L152,74 L200,50 L248,30 L248,138 L56,138 Z"
+        fill="url(#trendGrad)"/>
+      <!-- Trend line -->
+      <path class="line-draw" id="trendLine"
+        d="M56,82 L104,66 L152,74 L200,50 L248,30"
+        fill="none" stroke="#15cbc5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Projected dashed -->
+      <path class="line-draw" id="trendProj"
+        d="M248,30 L280,18"
+        fill="none" stroke="#15cbc5" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" opacity=".5"/>
+      <!-- Data points -->
+      <g id="trendDots" opacity="0">
+        <circle cx="56" cy="82" r="4" fill="#fff" stroke="#15cbc5" stroke-width="2"/>
+        <circle cx="104" cy="66" r="4" fill="#fff" stroke="#15cbc5" stroke-width="2"/>
+        <circle cx="152" cy="74" r="4" fill="#fff" stroke="#15cbc5" stroke-width="2"/>
+        <circle cx="200" cy="50" r="4" fill="#fff" stroke="#15cbc5" stroke-width="2"/>
+        <circle cx="248" cy="30" r="5" fill="#15cbc5" stroke="#fff" stroke-width="2"/>
+      </g>
+      <!-- Value labels -->
+      <g id="trendVals" opacity="0">
+        <text x="56" y="76" text-anchor="middle" class="chart-value" font-size="9">180k</text>
+        <text x="104" y="60" text-anchor="middle" class="chart-value" font-size="9">210k</text>
+        <text x="152" y="68" text-anchor="middle" class="chart-value" font-size="9">195k</text>
+        <text x="200" y="44" text-anchor="middle" class="chart-value" font-size="9">240k</text>
+        <text x="248" y="24" text-anchor="middle" class="chart-value" font-size="9">275k</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Card 6: Win rate donut -->
+  <div class="card" id="card6">
+    <div class="card-header">
+      <div class="card-icon green">&#x2714;</div>
+      <span class="card-title">Vinstkvot</span>
+    </div>
+    <div style="position:relative;width:100%;display:flex;justify-content:center;">
+      <svg viewBox="0 0 180 180" width="180" height="180" id="donutSvg">
+        <!-- Background circle -->
+        <circle cx="90" cy="90" r="70" fill="none" stroke="#e2e8f0" stroke-width="18"/>
+        <!-- Won segment: 78% of 439.82 circumference = 343.06 visible, dashoffset = 439.82 - 343.06 = 96.76 -->
+        <circle class="donut-segment" id="doSeg1" cx="90" cy="90" r="70"
+          fill="none" stroke="#15cbc5" stroke-width="18"
+          stroke-linecap="round"
+          stroke-dasharray="439.82"
+          style="--dash-full:439.82;--dash-target:96.76"
+          transform="rotate(-90 90 90)"/>
+        <!-- Lost segment: 8% = 35.19, offset = 439.82 - 35.19 = 404.63 -->
+        <circle class="donut-segment" id="doSeg2" cx="90" cy="90" r="70"
+          fill="none" stroke="#ef4444" stroke-width="18"
+          stroke-linecap="round"
+          stroke-dasharray="439.82"
+          style="--dash-full:439.82;--dash-target:404.63"
+          transform="rotate(190.8 90 90)"/>
+        <!-- Ongoing segment: 14% = 61.57, offset = 439.82 - 61.57 = 378.25 -->
+        <circle class="donut-segment" id="doSeg3" cx="90" cy="90" r="70"
+          fill="none" stroke="#94a3b8" stroke-width="18"
+          stroke-linecap="round"
+          stroke-dasharray="439.82"
+          style="--dash-full:439.82;--dash-target:378.25"
+          transform="rotate(219.6 90 90)"/>
+        <!-- Center text -->
+        <text x="90" y="82" text-anchor="middle" font-size="32" font-weight="800" fill="#1e293b" font-family="system-ui,'Segoe UI',sans-serif" id="donutPct" opacity="0">78%</text>
+        <text x="90" y="102" text-anchor="middle" font-size="11" fill="#64748b" font-family="system-ui,'Segoe UI',sans-serif" id="donutSub" opacity="0">Vinstkvot</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin-top:4px;">
+      <span class="big-subtitle" style="font-size:12px;">vs 71% f&ouml;rra kvartalet</span>
+    </div>
+    <div class="legend" style="justify-content:center;margin-top:8px;">
+      <div class="legend-item"><div class="legend-dot" style="background:#15cbc5"></div>Vunna</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>F&ouml;rlorade</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div>P&aring;g&aring;ende</div>
+    </div>
+  </div>
+
+  <!-- Card 7: Salesperson board (full width) -->
+  <div class="card card-span3" id="card7">
+    <div class="card-header">
+      <div class="card-icon purple">&#x1F465;</div>
+      <span class="card-title">S&auml;ljartavla</span>
+    </div>
+    <div class="legend" style="margin-bottom:14px;">
+      <div class="legend-item"><div class="legend-dot" style="background:#15cbc5"></div>Vunna</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7B61FF"></div>P&aring;g&aring;ende</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#cbd5e1"></div>F&ouml;rlorade</div>
+    </div>
+    <div id="spRows">
+      <div class="sp-row">
+        <div class="sp-avatar" style="background:#15cbc5">AL</div>
+        <div class="sp-name">Anna Lindberg</div>
+        <div class="sp-bar-container">
+          <div class="sp-bar-seg hbar-grow" style="width:50%;background:#15cbc5;" id="sb1a"></div>
+          <div class="sp-bar-seg hbar-grow" style="width:35%;background:#7B61FF;" id="sb1b"></div>
+          <div class="sp-bar-seg hbar-grow" style="width:15%;background:#cbd5e1;" id="sb1c"></div>
+        </div>
+        <div class="sp-value">1,2M</div>
+      </div>
+      <div class="sp-row">
+        <div class="sp-avatar" style="background:#7B61FF">JB</div>
+        <div class="sp-name">Johan Berg</div>
+        <div class="sp-bar-container">
+          <div class="sp-bar-seg hbar-grow" style="width:45%;background:#15cbc5;" id="sb2a"></div>
+          <div class="sp-bar-seg hbar-grow" style="width:38%;background:#7B61FF;" id="sb2b"></div>
+          <div class="sp-bar-seg hbar-grow" style="width:17%;background:#cbd5e1;" id="sb2c"></div>
+        </div>
+        <div class="sp-value">890k</div>
+      </div>
+      <div class="sp-row">
+        <div class="sp-avatar" style="background:#f59e0b">ME</div>
+        <div class="sp-name">Maria Ek</div>
+        <div class="sp-bar-container">
+          <div class="sp-bar-seg hbar-grow" style="width:40%;background:#15cbc5;" id="sb3a"></div>
+          <div class="sp-bar-seg hbar-grow" style="width:42%;background:#7B61FF;" id="sb3b"></div>
+          <div class="sp-bar-seg hbar-grow" style="width:18%;background:#cbd5e1;" id="sb3c"></div>
+        </div>
+        <div class="sp-value">670k</div>
+      </div>
+      <div class="sp-row">
+        <div class="sp-avatar" style="background:#ec4899">SN</div>
+        <div class="sp-name">Sara Nils</div>
+        <div class="sp-bar-container">
+          <div class="sp-bar-seg hbar-grow" style="width:38%;background:#15cbc5;" id="sb4a"></div>
+          <div class="sp-bar-seg hbar-grow" style="width:40%;background:#7B61FF;" id="sb4b"></div>
+          <div class="sp-bar-seg hbar-grow" style="width:22%;background:#cbd5e1;" id="sb4c"></div>
+        </div>
+        <div class="sp-value">520k</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 8: AI Insight (spans 2 cols) -->
+  <div class="card card-span2 insight" id="card8">
+    <div class="card-header">
+      <div class="card-icon" style="background:#fef9c3;font-size:18px;">&#x1F4A1;</div>
+      <span class="card-title">AI-insikt</span>
+    </div>
+    <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">Platsbes&ouml;k korrelerar med snabbare st&auml;ngning</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Aff&auml;rer med platsbes&ouml;k st&auml;ngs i snitt 40% snabbare</div>
+
+    <svg class="chart-svg" viewBox="0 0 400 80" id="insightSvg">
+      <!-- With visit -->
+      <text x="0" y="24" class="chart-label" font-size="12">Med platsbes&ouml;k</text>
+      <rect class="hbar-grow" id="ib1" x="120" y="10" width="130" height="24" rx="4" fill="#22c55e"/>
+      <text class="chart-value" x="258" y="27" id="iv1" opacity="0" font-size="12">34 dagar</text>
+      <!-- Without visit -->
+      <text x="0" y="64" class="chart-label" font-size="12">Utan platsbes&ouml;k</text>
+      <rect class="hbar-grow" id="ib2" x="120" y="50" width="225" height="24" rx="4" fill="#94a3b8"/>
+      <text class="chart-value" x="352" y="67" id="iv2" opacity="0" font-size="12">58 dagar</text>
+    </svg>
+
+    <div class="insight-rec">
+      <strong>Rekommendation:</strong> Boka platsbes&ouml;k f&ouml;r Castellum och Nordea-aff&auml;rerna
+    </div>
+    <button class="insight-btn" id="bookBtn" onclick="bookVisits()">&#x1F4C5; Boka platsbes&ouml;k</button>
+  </div>
+
+  <!-- Card 9: Confirmation card -->
+  <div class="card" id="card9" style="display:flex;align-items:center;justify-content:center;min-height:200px;">
+    <div style="text-align:center;">
+      <div style="font-size:40px;margin-bottom:8px;">&#x2705;</div>
+      <div class="big-number" style="font-size:20px;" id="bookMsg">2 platsbes&ouml;k</div>
+      <div class="big-subtitle" id="bookSub">Inbokade</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chat FAB -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+</button>
+
+<!-- Chat panel -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head">
+    <div class="chat-head-left">
+      <div class="chat-head-dot"></div>
+      <div>
+        <div class="chat-head-title">CRM-assistent</div>
+        <div class="chat-head-sub">AI-driven analys</div>
+      </div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">&times;</button>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <!-- Messages injected by JS -->
+  </div>
+  <div class="chat-footer">
+    <span style="font-size:12px;color:#64748b;">Klicka N&auml;sta steg eller tryck &rarr;</span>
+  </div>
+</div>
+
+<!-- Voice channel FAB -->
+<div class="voice-fab" id="voiceFab" onclick="this.classList.toggle('open')">
+  <div class="voice-fab-icon">&#x1F4DE;</div>
+  <div class="voice-fab-tooltip"><strong>Ring CRM-assistenten</strong><br>+46 8 123 45 67<br><span style="font-size:11px;opacity:0.7">Identifiera med BankID</span></div>
+</div>
+
+<!-- Step controls -->
+<div class="step-controls">
+  <button onclick="nextStep()">N&auml;sta steg &rarr;</button>
+  <span id="stepCounter">Steg 0 / 10</span>
+  <div id="stepNote" class="step-note"></div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── State ──────────────────────────────────────
+  var chatOpen = false;
+  var currentStep = 0;
+  var totalSteps = 10;
+
+  // ── Chat helpers ───────────────────────────────
+  var chatBody = document.getElementById('chatBody');
+
+  function addMsg(type, text) {
+    var div = document.createElement('div');
+    div.className = 'chat-msg ' + type;
+    div.textContent = text;
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() { div.classList.add('visible'); });
+    });
+  }
+
+  // ── Dashboard card helpers ─────────────────────
+  function showCard(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.add('visible');
+  }
+
+  function hidePlaceholder(id) {
+    var el = document.getElementById(id);
+    if (el) { el.classList.remove('visible'); el.classList.add('hidden'); }
+  }
+
+  function animStagger(ids, cls, stagger) {
+    ids.forEach(function(id, i) {
+      setTimeout(function() {
+        var el = document.getElementById(id);
+        if (el) el.classList.add(cls);
+      }, i * stagger);
+    });
+  }
+
+  function setOpacity(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.style.opacity = val;
+  }
+
+  // ── Reset everything ───────────────────────────
+  function resetAll() {
+    currentStep = 0;
+    updateCounter();
+
+    // Reset chat
+    chatBody.innerHTML = '';
+
+    // Hide all real cards
+    document.querySelectorAll('.card').forEach(function(c) {
+      c.classList.remove('visible');
+    });
+
+    // Show all placeholders
+    document.querySelectorAll('.placeholder-card').forEach(function(p) {
+      p.classList.remove('hidden');
+      p.classList.add('visible');
+    });
+
+    // Reset funnel
+    document.querySelectorAll('.funnel-stage').forEach(function(s) { s.classList.remove('animate'); });
+
+    // Reset sparkline
+    var sparkLine = document.getElementById('sparkLine');
+    var sparkArea = document.getElementById('sparkArea');
+    if (sparkLine) sparkLine.classList.remove('animate');
+    if (sparkArea) sparkArea.classList.remove('animate');
+    setOpacity('sparkDot', '0');
+
+    // Reset close time bars
+    ['cb1','cb2','cb3','cb4'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('animate');
+    });
+    ['cv1','cv2','cv3','cv4'].forEach(function(id) { setOpacity(id, '0'); });
+
+    // Reset quarterly bars
+    ['qb1','qb2','qb3','qb4','qb5','qb6'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('animate');
+    });
+
+    // Reset trend
+    ['trendLine','trendProj'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('animate');
+    });
+    var trendArea = document.getElementById('trendArea');
+    if (trendArea) trendArea.classList.remove('animate');
+    ['trendDots','trendVals'].forEach(function(id) { setOpacity(id, '0'); });
+
+    // Reset donut
+    ['doSeg1','doSeg2','doSeg3'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('animate');
+    });
+    ['donutPct','donutSub'].forEach(function(id) { setOpacity(id, '0'); });
+
+    // Reset salesperson bars
+    document.querySelectorAll('.sp-bar-seg').forEach(function(s) { s.classList.remove('animate'); });
+
+    // Reset insight bars
+    ['ib1','ib2'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('animate');
+    });
+    ['iv1','iv2'].forEach(function(id) { setOpacity(id, '0'); });
+
+    // Reset book button
+    var bookBtn = document.getElementById('bookBtn');
+    if (bookBtn) {
+      bookBtn.classList.remove('success');
+      bookBtn.innerHTML = '&#x1F4C5; Boka platsbes\u00f6k';
+    }
+
+    // Close and reopen chat
+    if (!chatOpen) toggleChatFn();
+  }
+
+  // ── Steps ──────────────────────────────────────
+  var steps = [
+    // Step 1: Chat opens, agent greets
+    function() {
+      if (!chatOpen) toggleChatFn();
+      addMsg('agent', 'Hej Anna! Vad vill du analysera idag?');
+    },
+    // Step 2: User asks "Visa pipeline"
+    function() {
+      addMsg('user', 'Visa pipeline-\u00f6versikt');
+      addMsg('agent', 'Laddar pipeline-data...');
+    },
+    // Step 3: Row 1 dashboard cards appear (funnel, value, close time)
+    function() {
+      hidePlaceholder('ph1');
+      hidePlaceholder('ph2');
+      hidePlaceholder('ph3');
+      showCard('card1');
+      animStagger(['fs1','fs2','fs3','fs4'], 'animate', 200);
+      setTimeout(function() { showCard('card2'); }, 200);
+      var sl = document.getElementById('sparkLine');
+      var sa = document.getElementById('sparkArea');
+      if (sl) setTimeout(function() { sl.classList.add('animate'); }, 300);
+      if (sa) setTimeout(function() { sa.classList.add('animate'); }, 300);
+      setTimeout(function() { setOpacity('sparkDot', '1'); }, 1100);
+      setTimeout(function() { showCard('card3'); }, 400);
+      animStagger(['cb1','cb2','cb3','cb4'], 'animate', 150);
+      ['cv1','cv2','cv3','cv4'].forEach(function(id, i) {
+        setTimeout(function() { setOpacity(id, '1'); }, 800 + i * 150);
+      });
+    },
+    // Step 4: User asks "Jamfor med forra kvartalet"
+    function() {
+      addMsg('user', 'J\u00e4mf\u00f6r med f\u00f6rra kvartalet');
+      addMsg('agent', 'Kvartalsdata och trender inladdade.');
+    },
+    // Step 5: Row 2 cards appear (quarterly, trends, win rate)
+    function() {
+      hidePlaceholder('ph4');
+      hidePlaceholder('ph5');
+      hidePlaceholder('ph6');
+      showCard('card4');
+      animStagger(['qb1','qb2','qb3','qb4','qb5','qb6'], 'animate', 120);
+      setTimeout(function() { showCard('card5'); }, 300);
+      var ta = document.getElementById('trendArea');
+      var tl = document.getElementById('trendLine');
+      var tp = document.getElementById('trendProj');
+      if (ta) setTimeout(function() { ta.classList.add('animate'); }, 400);
+      if (tl) setTimeout(function() { tl.classList.add('animate'); }, 400);
+      if (tp) setTimeout(function() { tp.classList.add('animate'); }, 400);
+      setTimeout(function() {
+        setOpacity('trendDots', '1');
+        setOpacity('trendVals', '1');
+      }, 1200);
+      setTimeout(function() { showCard('card6'); }, 500);
+      ['doSeg1','doSeg2','doSeg3'].forEach(function(id, i) {
+        setTimeout(function() {
+          var el = document.getElementById(id);
+          if (el) el.classList.add('animate');
+        }, 600 + i * 200);
+      });
+      setTimeout(function() {
+        setOpacity('donutPct', '1');
+        setOpacity('donutSub', '1');
+      }, 1400);
+    },
+    // Step 6: User asks "Visa per saljare"
+    function() {
+      addMsg('user', 'Visa per s\u00e4ljare');
+      addMsg('agent', 'S\u00e4ljstatistik per person.');
+    },
+    // Step 7: Row 3 salesperson chart appears
+    function() {
+      hidePlaceholder('ph7');
+      showCard('card7');
+      var spBars = document.querySelectorAll('.sp-bar-seg');
+      spBars.forEach(function(bar, i) {
+        setTimeout(function() { bar.classList.add('animate'); }, 200 + i * 100);
+      });
+    },
+    // Step 8: Agent offers AI insight
+    function() {
+      addMsg('agent', 'Jag ser ett m\u00f6nster: aff\u00e4rer med platsbes\u00f6k st\u00e4ngs 40% snabbare. Vill du se det?');
+    },
+    // Step 9: User accepts, insight card appears
+    function() {
+      addMsg('user', 'Ja');
+      addMsg('agent', 'H\u00e4r \u00e4r insikten med rekommendation.');
+      hidePlaceholder('ph8');
+      hidePlaceholder('ph9');
+      showCard('card8');
+      setTimeout(function() {
+        var ib1 = document.getElementById('ib1');
+        if (ib1) ib1.classList.add('animate');
+      }, 300);
+      setTimeout(function() {
+        var ib2 = document.getElementById('ib2');
+        if (ib2) ib2.classList.add('animate');
+      }, 500);
+      setTimeout(function() {
+        setOpacity('iv1', '1');
+        setOpacity('iv2', '1');
+      }, 1000);
+    },
+    // Step 10: Action confirmed
+    function() {
+      showCard('card9');
+      var btn = document.getElementById('bookBtn');
+      if (btn && !btn.classList.contains('success')) {
+        btn.classList.add('success');
+        btn.innerHTML = '&#x2705; 2 platsbes\u00f6k inbokade';
+      }
+      addMsg('agent', '2 platsbes\u00f6k inbokade f\u00f6r Castellum och Nordea.');
+    }
+  ];
+
+  // ── Step notes ─────────────────────────────────
+  var stepNotes = [
+    "AI-assistenten \u00f6ppnas \u2014 redo att analysera",
+    "Anv\u00e4ndaren ber om pipeline-\u00f6versikt",
+    "Tratt, totalv\u00e4rde med sparkline och st\u00e4ngningstider per typ",
+    "Anv\u00e4ndaren ber om kvartalsj\u00e4mf\u00f6relse",
+    "Stapeldiagram, int\u00e4ktstrend och vinstkvot \u2014 allt animerat",
+    "Anv\u00e4ndaren vill se per s\u00e4ljare",
+    "S\u00e4ljartavla med individuella resultat",
+    "AI:n erbjuder en automatisk insikt",
+    "Platsbes\u00f6k korrelerar med snabbare st\u00e4ngning \u2014 data bevisar det",
+    "\u00c5tg\u00e4rd utf\u00f6rd \u2014 platsbes\u00f6k bokade direkt"
+  ];
+
+  // ── Step counter ───────────────────────────────
+  function updateCounter() {
+    var el = document.getElementById('stepCounter');
+    if (el) el.textContent = 'Steg ' + currentStep + ' / ' + totalSteps;
+    document.getElementById('stepNote').textContent = stepNotes[currentStep - 1] || '';
+  }
+
+  // ── Next step ──────────────────────────────────
+  function advanceStep() {
+    if (currentStep >= totalSteps) return;
+    steps[currentStep]();
+    currentStep++;
+    updateCounter();
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  window.nextStep = advanceStep;
+
+  // ── Book visits (manual click on insight button) ──
+  window.bookVisits = function() {
+    var btn = document.getElementById('bookBtn');
+    if (!btn || btn.classList.contains('success')) return;
+    btn.classList.add('success');
+    btn.innerHTML = '&#x2705; 2 platsbes\u00f6k inbokade';
+  };
+
+  // ── Toggle chat ────────────────────────────────
+  function toggleChatFn() {
+    chatOpen = !chatOpen;
+    document.getElementById('chatPanel').classList.toggle('open', chatOpen);
+    document.getElementById('chatFab').classList.toggle('hidden', chatOpen);
+  }
+
+  window.toggleChat = toggleChatFn;
+
+  // ── Keyboard navigation ────────────────────────
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      advanceStep();
+    } else if (e.key === 'r' || e.key === 'R') {
+      resetAll();
+    }
+  });
+
+  // ── Initial state ──────────────────────────────
+  updateCounter();
+
+})();
+</script>
+</body>
+</html>

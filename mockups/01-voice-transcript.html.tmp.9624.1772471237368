@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI CRM-assistent — Mötesinsikter</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #15cbc5;
+    --teal-light: rgba(21, 203, 197, 0.15);
+    --teal-mid: rgba(21, 203, 197, 0.4);
+    --purple: #7B61FF;
+    --purple-light: rgba(123, 97, 255, 0.12);
+    --dark-bg: #f8fafc;
+    --dark-bg2: #f0f2f5;
+    --light-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --text-light: #cbd5e1;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --green: #22c55e;
+    --border: #e2e8f0;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--dark-bg2);
+    color: var(--text-dark);
+    overflow: hidden;
+    padding-top: 36px;
+  }
+
+  /* ============ LAYOUT ============ */
+  .app {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+  }
+
+  /* LEFT PANEL — Chat */
+  .chat-panel {
+    width: 320px;
+    min-width: 320px;
+    background: var(--dark-bg);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e2e8f0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .chat-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .chat-header-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--teal), var(--purple));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 2px 12px rgba(21, 203, 197, 0.3);
+  }
+
+  .chat-header h2 {
+    color: var(--text-dark);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .chat-header small {
+    color: var(--text-muted);
+    font-size: 11px;
+    display: block;
+    margin-top: 1px;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+  /* Chat bubbles */
+  .msg {
+    max-width: 92%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: msgIn 0.35s ease forwards;
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--teal), #0ea5a5);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg.agent {
+    align-self: flex-start;
+    background: #f1f5f9;
+    color: var(--text-dark);
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg .label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    opacity: 0.6;
+  }
+
+  .msg.user .label { color: rgba(255,255,255,0.7); }
+  .msg.agent .label { color: var(--teal); }
+
+  @keyframes msgIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: inline-flex;
+    gap: 4px;
+    padding: 10px 16px;
+    align-self: flex-start;
+    background: #f1f5f9;
+    border-radius: 14px;
+    border-bottom-left-radius: 4px;
+  }
+  .typing-indicator span {
+    width: 6px; height: 6px;
+    background: var(--teal);
+    border-radius: 50%;
+    animation: typingBounce 1.2s ease-in-out infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  .chat-footer {
+    padding: 14px;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+  }
+  .chat-input-fake {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text-muted);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chat-input-fake .mic { color: var(--teal); font-size: 14px; }
+
+  /* ============ RIGHT PANEL — Dashboard ============ */
+  .dashboard-panel {
+    flex: 1;
+    background: var(--light-bg);
+    overflow-y: auto;
+    padding: 28px 32px;
+    position: relative;
+  }
+
+  .dashboard-panel::-webkit-scrollbar { width: 6px; }
+  .dashboard-panel::-webkit-scrollbar-track { background: transparent; }
+  .dashboard-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    letter-spacing: -0.02em;
+  }
+
+  .live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    background: rgba(34, 197, 94, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .live-badge::before {
+    content: '';
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: livePulse 2s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Dashboard grid */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    position: relative;
+  }
+
+  .dash-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 22px;
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dash-card.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .dash-card.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .dash-card .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .icon {
+    font-size: 14px;
+  }
+
+  /* ---- Customer Card ---- */
+  .customer-info {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .customer-avatar {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--teal), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .customer-details h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+  }
+  .customer-details .role {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .deal-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--purple-light);
+    color: var(--purple);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 8px;
+  }
+
+  .deal-amount {
+    font-weight: 700;
+  }
+
+  .deal-stage {
+    font-size: 10px;
+    background: rgba(123, 97, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  /* ---- Timeline ---- */
+  .timeline-track {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 30px 10px 0 10px;
+    margin-top: 12px;
+  }
+
+  .timeline-line {
+    position: absolute;
+    top: 36px;
+    left: 20px;
+    right: 20px;
+    height: 2px;
+    background: var(--border);
+  }
+
+  .timeline-dot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+  }
+
+  .timeline-dot .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #94a3b8;
+    border: 2px solid var(--card-bg);
+    transition: all 0.3s ease;
+  }
+
+  .timeline-dot.active .dot {
+    width: 16px; height: 16px;
+    background: var(--teal);
+    box-shadow: 0 0 0 4px var(--teal-light);
+  }
+
+  .timeline-dot.new .dot {
+    width: 16px; height: 16px;
+    background: var(--teal);
+    box-shadow: 0 0 0 4px var(--teal-light);
+    animation: dotPop 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes dotPop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  .timeline-dot .date-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .timeline-dot .event-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    font-weight: 500;
+    position: absolute;
+    top: -18px;
+  }
+
+  .timeline-dot.active .event-label,
+  .timeline-dot.new .event-label {
+    color: var(--teal);
+    font-weight: 600;
+  }
+
+  /* ---- Waiting state ---- */
+  .waiting-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+    opacity: 0.7;
+  }
+  .waiting-state .waiting-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    animation: waitPulse 3s ease-in-out infinite;
+  }
+  @keyframes waitPulse {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.05); }
+  }
+  .waiting-state p {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* ---- Deal Health Gauge ---- */
+  .gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0 0 0;
+  }
+
+  .gauge-svg {
+    width: 200px;
+    height: 115px;
+    overflow: visible;
+  }
+
+  .gauge-bg {
+    fill: none;
+    stroke: #e2e8f0;
+    stroke-width: 18;
+    stroke-linecap: round;
+  }
+
+  .gauge-fill {
+    fill: none;
+    stroke-width: 18;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .gauge-needle {
+    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: 100px 100px;
+  }
+
+  .gauge-value {
+    font-size: 36px;
+    font-weight: 800;
+    fill: var(--text-dark);
+    text-anchor: middle;
+  }
+
+  .gauge-label {
+    font-size: 11px;
+    fill: var(--text-muted);
+    text-anchor: middle;
+    font-weight: 500;
+  }
+
+  /* Buy signals */
+  .signals-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .signal-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-dark);
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.35s ease;
+  }
+
+  .signal-item.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .signal-check {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .signal-text {
+    line-height: 1.4;
+  }
+  .signal-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .signal-text span {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ---- Radar Chart ---- */
+  .radar-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+  }
+
+  .radar-svg {
+    width: 240px;
+    height: 220px;
+    overflow: visible;
+  }
+
+  .radar-grid {
+    fill: none;
+    stroke: #e2e8f0;
+    stroke-width: 1;
+  }
+
+  .radar-axis {
+    stroke: #e2e8f0;
+    stroke-width: 1;
+  }
+
+  .radar-area {
+    fill: var(--teal-mid);
+    stroke: var(--teal);
+    stroke-width: 2;
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .radar-point {
+    fill: var(--teal);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .radar-label {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--text-dark);
+    text-anchor: middle;
+  }
+
+  .radar-value {
+    font-size: 9px;
+    font-weight: 700;
+    fill: var(--teal);
+    text-anchor: middle;
+  }
+
+  /* ---- Competition bars ---- */
+  .comp-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+  }
+
+  .comp-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .comp-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .comp-label .comp-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .comp-bar-track {
+    height: 10px;
+    background: #f1f5f9;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .comp-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 0%;
+  }
+
+  .comp-bar-fill.svs {
+    background: linear-gradient(90deg, var(--teal), #0ea5a5);
+  }
+  .comp-bar-fill.competitor {
+    background: #94a3b8;
+  }
+
+  .advantage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .advantage-badge.show {
+    opacity: 1;
+  }
+
+  /* ---- Summary Card ---- */
+  .summary-card-inner {
+    position: relative;
+  }
+
+  .summary-description {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+
+  .action-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .action-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.35s ease;
+  }
+
+  .action-item.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .action-priority {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .action-priority.high { background: var(--red); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+  .action-priority.medium { background: var(--yellow); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); }
+  .action-priority.low { background: var(--green); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); }
+
+  .action-text {
+    font-size: 13px;
+    color: var(--text-dark);
+    line-height: 1.4;
+  }
+
+  .confidence-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .confidence-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .confidence-track {
+    flex: 1;
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--green));
+    border-radius: 4px;
+    transition: width 0.8s ease;
+    width: 0%;
+  }
+
+  .confidence-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teal);
+    white-space: nowrap;
+  }
+
+  .summary-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--teal), #0ea5a5);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(21, 203, 197, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(21, 203, 197, 0.4);
+  }
+
+  .btn-primary.clicked {
+    animation: btnClick 0.3s ease;
+  }
+
+  @keyframes btnClick {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+
+  .btn-secondary {
+    background: #f1f5f9;
+    color: var(--text-dark);
+    border: 1px solid var(--border);
+  }
+
+  .success-banner {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 10px;
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 14px;
+    animation: bannerIn 0.4s ease;
+  }
+
+  .success-banner.show {
+    display: flex;
+  }
+
+  @keyframes bannerIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- Next step countdown ---- */
+  .next-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--purple-light);
+    border-radius: 10px;
+    border: 1px solid rgba(123, 97, 255, 0.15);
+    margin-top: 14px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .next-step.show {
+    opacity: 1;
+  }
+
+  .next-step .ns-icon {
+    font-size: 16px;
+  }
+  .next-step .ns-text {
+    font-size: 12px;
+    color: var(--purple);
+    font-weight: 600;
+  }
+  .next-step .ns-time {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--purple);
+  }
+
+  /* ---- Bottom bar ---- */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    padding: 12px 20px;
+    background: var(--dark-bg2);
+    border-top: 1px solid #e2e8f0;
+    z-index: 10;
+  }
+
+  .bottom-bar .footer-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .chat-panel { width: 100%; min-width: 100%; max-height: 45vh; }
+    .dashboard-panel { padding: 20px 16px; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+  }
+.svs-global-header{position:fixed;top:0;left:0;right:0;height:36px;background:#1a1a1a;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:9999;font-family:system-ui,-apple-system,sans-serif}
+.svs-global-header .svs-logo-dots{display:flex;gap:4px;margin-right:8px}
+.svs-global-header .svs-logo-dots span{width:8px;height:8px;border-radius:50%;background:#c8a961}
+.svs-global-header .svs-left{display:flex;align-items:center}
+.svs-global-header .svs-brand-text{color:#fff;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+.svs-global-header .svs-right{color:#15cbc5;font-size:11px;font-weight:700}
+
+  /* ---- Step Controls ---- */
+  .step-controls {
+    position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 16px; z-index: 9998;
+    background: rgba(30,41,59,0.95); padding: 10px 24px; border-radius: 30px;
+    flex-wrap: wrap; justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3); backdrop-filter: blur(8px);
+  }
+  .step-controls button {
+    background: #15cbc5; color: #fff; border: none; padding: 8px 24px;
+    border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .step-controls button:hover { background: #0ea5a0; }
+  #stepCounter { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 300; min-width: 120px; }
+  .step-note{width:100%;text-align:center;color:rgba(255,255,255,0.5);font-size:12px;font-style:italic;line-height:1.3;margin-top:2px}
+
+  /* ---- Voice FAB ---- */
+  .voice-fab {
+    position: fixed; bottom: 20px; left: 20px; z-index: 9998;
+    cursor: pointer;
+  }
+  .voice-fab-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: #15cbc5; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; box-shadow: 0 4px 16px rgba(21,203,197,0.4);
+    transition: transform 0.2s;
+  }
+  .voice-fab:hover .voice-fab-icon { transform: scale(1.1); }
+  .voice-fab-tooltip {
+    position: absolute; bottom: 56px; left: 0;
+    background: #1e293b; color: #fff; padding: 10px 14px;
+    border-radius: 8px; font-size: 13px; line-height: 1.5;
+    white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .voice-fab.open .voice-fab-tooltip { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body>
+<div class="svs-global-header"><div class="svs-left"><div class="svs-logo-dots"><span></span><span></span><span></span><span></span></div><span class="svs-brand-text">Svensk Ventilationsservice</span></div><div class="svs-right">AI-First CRM</div></div>
+
+<div class="app">
+
+  <!-- ===================== LEFT: Chat ===================== -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div class="chat-header-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div>
+        <h2>AI CRM-assistent</h2>
+        <small>Insiktsbyggande konversation</small>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-footer">
+      <div class="chat-input-fake">
+        <span class="mic">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </span>
+        Skriv ett meddelande...
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== RIGHT: Dashboard ===================== -->
+  <div class="dashboard-panel" id="dashboardPanel">
+    <div class="dashboard-header">
+      <h1>Kundinsikter</h1>
+      <span class="live-badge" id="liveBadge">Live</span>
+    </div>
+
+    <div class="dashboard-grid" id="dashGrid">
+
+      <!-- Waiting state (shown initially) -->
+      <div class="waiting-state" id="waitingState">
+        <div class="waiting-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <p>Väntar på data från konversationen...</p>
+        <p style="font-size:11px;margin-top:6px;opacity:0.6;">Panelen fylls automatiskt med insikter</p>
+      </div>
+
+      <!-- CARD 1: Customer + Timeline (full width) -->
+      <div class="dash-card full-width" id="cardCustomer">
+        <div class="card-title"><span class="icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span> Kundkort</div>
+        <div class="customer-info">
+          <div class="customer-avatar">EJ</div>
+          <div class="customer-details">
+            <h3>Castellum AB</h3>
+            <div class="role">Erik Johansson &mdash; Fastighetschef</div>
+            <div class="deal-tag">
+              <span>Energioptimering</span>
+              <span class="deal-amount">670 000 kr</span>
+              <span class="deal-stage">Förhandling</span>
+            </div>
+          </div>
+        </div>
+        <!-- Timeline -->
+        <div class="timeline-track">
+          <div class="timeline-line"></div>
+          <div class="timeline-dot">
+            <span class="event-label">Första kontakt</span>
+            <span class="dot"></span>
+            <span class="date-label">12 jan</span>
+          </div>
+          <div class="timeline-dot">
+            <span class="event-label">Demo</span>
+            <span class="dot"></span>
+            <span class="date-label">28 jan</span>
+          </div>
+          <div class="timeline-dot">
+            <span class="event-label">Offert</span>
+            <span class="dot"></span>
+            <span class="date-label">10 feb</span>
+          </div>
+          <div class="timeline-dot">
+            <span class="event-label">Uppföljning</span>
+            <span class="dot"></span>
+            <span class="date-label">22 feb</span>
+          </div>
+          <div class="timeline-dot active" id="timelineCurrent">
+            <span class="event-label">Idag</span>
+            <span class="dot"></span>
+            <span class="date-label">2 mar</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: Deal Health Gauge -->
+      <div class="dash-card" id="cardGauge">
+        <div class="card-title"><span class="icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </span> Affärens hälsa</div>
+        <div class="gauge-container">
+          <svg class="gauge-svg" viewBox="0 0 200 120">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#ef4444"/>
+                <stop offset="40%" stop-color="#f59e0b"/>
+                <stop offset="100%" stop-color="#22c55e"/>
+              </linearGradient>
+            </defs>
+            <!-- Background arc -->
+            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100"/>
+            <!-- Filled arc -->
+            <path id="gaugeFill" class="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100"
+                  stroke="url(#gaugeGrad)"
+                  stroke-dasharray="251.2"
+                  stroke-dashoffset="251.2"/>
+            <!-- Needle -->
+            <g class="gauge-needle" id="gaugeNeedle">
+              <line x1="100" y1="100" x2="100" y2="28" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="100" cy="100" r="5" fill="#1e293b"/>
+            </g>
+            <!-- Value -->
+            <text id="gaugeValueText" class="gauge-value" x="100" y="96">0%</text>
+            <text class="gauge-label" x="100" y="116">Sannolikhet</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- CARD 3: Buy Signals -->
+      <div class="dash-card" id="cardSignals">
+        <div class="card-title"><span class="icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </span> Köpsignaler</div>
+        <ul class="signals-list">
+          <li class="signal-item" id="sig1">
+            <div class="signal-check">&#10003;</div>
+            <div class="signal-text">
+              <strong>Budget bekräftad</strong>
+              <span>Har budget avsatt för Q2</span>
+            </div>
+          </li>
+          <li class="signal-item" id="sig2">
+            <div class="signal-check">&#10003;</div>
+            <div class="signal-text">
+              <strong>Tidslinje &mdash; vill starta Q2</strong>
+              <span>Vill komma igång snabbt</span>
+            </div>
+          </li>
+          <li class="signal-item" id="sig3">
+            <div class="signal-check">&#10003;</div>
+            <div class="signal-text">
+              <strong>Frågade om leverans</strong>
+              <span>Högt engagemang i processen</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- CARD 4: Radar / Needs Analysis -->
+      <div class="dash-card" id="cardRadar">
+        <div class="card-title"><span class="icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </span> Behovsanalys</div>
+        <div class="radar-container">
+          <svg class="radar-svg" viewBox="0 0 240 220">
+            <g transform="translate(120,105)">
+              <!-- Grid rings -->
+              <polygon class="radar-grid" points="0,-80 76,-24.7 47,64.7 -47,64.7 -76,-24.7"/>
+              <polygon class="radar-grid" points="0,-60 57,-18.5 35.3,48.5 -35.3,48.5 -57,-18.5"/>
+              <polygon class="radar-grid" points="0,-40 38,-12.4 23.5,32.4 -23.5,32.4 -38,-12.4"/>
+              <polygon class="radar-grid" points="0,-20 19,-6.2 11.8,16.2 -11.8,16.2 -19,-6.2"/>
+              <!-- Axes -->
+              <line class="radar-axis" x1="0" y1="0" x2="0" y2="-80"/>
+              <line class="radar-axis" x1="0" y1="0" x2="76" y2="-24.7"/>
+              <line class="radar-axis" x1="0" y1="0" x2="47" y2="64.7"/>
+              <line class="radar-axis" x1="0" y1="0" x2="-47" y2="64.7"/>
+              <line class="radar-axis" x1="0" y1="0" x2="-76" y2="-24.7"/>
+              <!-- Data polygon -->
+              <polygon id="radarArea" class="radar-area"
+                       points="0,0 0,0 0,0 0,0 0,0"/>
+              <!-- Data points -->
+              <circle id="rp1" class="radar-point" cx="0" cy="0" r="4"/>
+              <circle id="rp2" class="radar-point" cx="0" cy="0" r="4"/>
+              <circle id="rp3" class="radar-point" cx="0" cy="0" r="4"/>
+              <circle id="rp4" class="radar-point" cx="0" cy="0" r="4"/>
+              <circle id="rp5" class="radar-point" cx="0" cy="0" r="4"/>
+            </g>
+            <!-- Labels -->
+            <text class="radar-label" x="120" y="12">Energi</text>
+            <text id="rv1" class="radar-value" x="120" y="23">9/10</text>
+
+            <text class="radar-label" x="220" y="73">Luftkvalitet</text>
+            <text id="rv2" class="radar-value" x="220" y="84">8/10</text>
+
+            <text class="radar-label" x="187" y="185">Ålder system</text>
+            <text id="rv3" class="radar-value" x="187" y="196">9/10</text>
+
+            <text class="radar-label" x="53" y="185">Brådskande</text>
+            <text id="rv4" class="radar-value" x="53" y="196">7/10</text>
+
+            <text class="radar-label" x="20" y="73">Budget</text>
+            <text id="rv5" class="radar-value" x="20" y="84">8/10</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- CARD 5: Competition Analysis -->
+      <div class="dash-card" id="cardCompetition">
+        <div class="card-title"><span class="icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </span> Konkurrensanalys</div>
+        <div class="comp-bars">
+          <div class="comp-row">
+            <div class="comp-label">
+              <span>SVS (vi)</span>
+              <span class="comp-tag" style="background:rgba(21,203,197,0.1);color:var(--teal);">Rekommenderad</span>
+            </div>
+            <div class="comp-bar-track">
+              <div class="comp-bar-fill svs" id="barSVS"></div>
+            </div>
+          </div>
+          <div class="comp-row">
+            <div class="comp-label">
+              <span>Swegon</span>
+              <span class="comp-tag" style="background:#f1f5f9;color:#94a3b8;">Dyrare</span>
+            </div>
+            <div class="comp-bar-track">
+              <div class="comp-bar-fill competitor" id="barSwegon"></div>
+            </div>
+          </div>
+        </div>
+        <div class="advantage-badge" id="advantageBadge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Vår fördel: Pris + Lokal närvaro
+        </div>
+      </div>
+
+      <!-- CARD 6: Summary (full width) -->
+      <div class="dash-card full-width" id="cardSummary">
+        <div class="card-title"><span class="icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span> AI-genererad mötessammanfattning</div>
+        <div class="summary-card-inner">
+          <p class="summary-description">Baserat på konversationen har följande åtgärder identifierats för att driva affären framåt.</p>
+          <div class="action-items">
+            <div class="action-item" id="act1">
+              <div class="action-priority high"></div>
+              <div class="action-text">Skicka uppdaterad offert inom 48h &mdash; pressa på prisfördelen gentemot Swegon</div>
+            </div>
+            <div class="action-item" id="act2">
+              <div class="action-priority medium"></div>
+              <div class="action-text">Boka platsbesök på de två äldre fastigheterna för behovsanalys</div>
+            </div>
+            <div class="action-item" id="act3">
+              <div class="action-priority low"></div>
+              <div class="action-text">Flytta affären till &laquo;Offert skickad&raquo; efter offertutskick</div>
+            </div>
+          </div>
+          <div class="confidence-bar-row">
+            <span class="confidence-label">Konfidens</span>
+            <div class="confidence-track">
+              <div class="confidence-fill" id="confidenceFill"></div>
+            </div>
+            <span class="confidence-value" id="confidenceValue">0%</span>
+          </div>
+          <div class="summary-actions">
+            <button class="btn btn-primary" id="btnExecute">&#10003; Utför alla</button>
+            <button class="btn btn-secondary">&#9998; Redigera</button>
+          </div>
+          <div class="success-banner" id="successBanner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            3 åtgärder skapade i CRM
+          </div>
+          <div class="next-step" id="nextStep">
+            <span class="ns-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7B61FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
+            <span class="ns-text">Offert deadline</span>
+            <span class="ns-time">2 dagar</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dashboard-grid -->
+  </div><!-- /dashboard-panel -->
+
+</div><!-- /app -->
+
+<!-- Step Controls -->
+<div class="step-controls">
+  <button id="btnNext" onclick="nextStep()">N&auml;sta &rarr;</button>
+  <span id="stepCounter">Klicka f&ouml;r att b&ouml;rja</span>
+  <div id="stepNote" class="step-note"></div>
+</div>
+
+<!-- Voice FAB -->
+<div class="voice-fab" id="voiceFab" onclick="this.classList.toggle('open')">
+  <div class="voice-fab-icon">&#128222;</div>
+  <div class="voice-fab-tooltip">
+    <strong>Ring CRM-assistenten</strong><br>
+    +46 8 123 45 67<br>
+    <span style="font-size:11px;opacity:0.7">Identifiera med BankID</span>
+  </div>
+</div>
+
+<!-- Bottom bar -->
+<div class="bottom-bar">
+  <span class="footer-text">AI-First CRM &mdash; Mockup Demo</span>
+</div>
+
+<script>
+(function() {
+  // ============ REFERENCES ============
+  const chatEl = document.getElementById('chatMessages');
+  const waitingEl = document.getElementById('waitingState');
+  const dashGrid = document.getElementById('dashGrid');
+
+  // Cards
+  const cardCustomer = document.getElementById('cardCustomer');
+  const cardGauge = document.getElementById('cardGauge');
+  const cardSignals = document.getElementById('cardSignals');
+  const cardRadar = document.getElementById('cardRadar');
+  const cardCompetition = document.getElementById('cardCompetition');
+  const cardSummary = document.getElementById('cardSummary');
+
+  // Gauge
+  const gaugeFill = document.getElementById('gaugeFill');
+  const gaugeNeedle = document.getElementById('gaugeNeedle');
+  const gaugeValueText = document.getElementById('gaugeValueText');
+
+  // Radar
+  const radarArea = document.getElementById('radarArea');
+  const radarPoints = [
+    document.getElementById('rp1'),
+    document.getElementById('rp2'),
+    document.getElementById('rp3'),
+    document.getElementById('rp4'),
+    document.getElementById('rp5')
+  ];
+
+  // Competition
+  const barSVS = document.getElementById('barSVS');
+  const barSwegon = document.getElementById('barSwegon');
+  const advantageBadge = document.getElementById('advantageBadge');
+
+  // Summary
+  const confidenceFill = document.getElementById('confidenceFill');
+  const confidenceValue = document.getElementById('confidenceValue');
+  const btnExecute = document.getElementById('btnExecute');
+  const successBanner = document.getElementById('successBanner');
+  const nextStepEl = document.getElementById('nextStep');
+
+  // Step controls
+  const btnNext = document.getElementById('btnNext');
+  const stepCounter = document.getElementById('stepCounter');
+
+  // ============ HELPERS ============
+  function addMessageNow(type, text) {
+    // Remove any existing typing indicator
+    const existingTyping = chatEl.querySelector('.typing-indicator');
+    if (existingTyping) existingTyping.remove();
+
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    const label = type === 'user' ? 'Du' : 'AI-assistent';
+    div.innerHTML = '<div class="label">' + label + '</div>' + text;
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function showTypingNow() {
+    // Remove existing
+    const existing = chatEl.querySelector('.typing-indicator');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.className = 'typing-indicator';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function showCardNow(card) {
+    card.classList.add('visible');
+  }
+
+  // Gauge animation
+  function setGaugeNow(percent) {
+    const arcLen = 251.2;
+    const offset = arcLen * (1 - percent / 100);
+    gaugeFill.style.strokeDashoffset = offset;
+
+    const angle = -90 + (percent / 100) * 180;
+    gaugeNeedle.style.transform = 'rotate(' + angle + 'deg)';
+
+    animateNumber(gaugeValueText, percent, '%');
+  }
+
+  function animateNumber(el, target, suffix) {
+    const start = parseInt(el.textContent) || 0;
+    const diff = target - start;
+    const duration = 1000;
+    const startTime = performance.now();
+
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(start + diff * eased);
+      el.textContent = current + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // Radar chart
+  function setRadarNow(values) {
+    const angles = [-90, -18, 54, 126, 198].map(a => a * Math.PI / 180);
+    const maxR = 80;
+
+    const pts = values.map((v, i) => {
+      const r = (v / 10) * maxR;
+      const x = Math.cos(angles[i]) * r;
+      const y = Math.sin(angles[i]) * r;
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+
+    radarArea.setAttribute('points', pts.join(' '));
+
+    values.forEach((v, i) => {
+      const r = (v / 10) * maxR;
+      const x = Math.cos(angles[i]) * r;
+      const y = Math.sin(angles[i]) * r;
+      radarPoints[i].setAttribute('cx', x.toFixed(1));
+      radarPoints[i].setAttribute('cy', y.toFixed(1));
+    });
+  }
+
+  // ============ RESET ============
+  function resetAll() {
+    // Clear chat
+    chatEl.innerHTML = '';
+
+    // Show waiting
+    waitingEl.style.display = '';
+
+    // Hide all cards
+    [cardCustomer, cardGauge, cardSignals, cardRadar, cardCompetition, cardSummary].forEach(c => {
+      c.classList.remove('visible');
+    });
+
+    // Reset gauge
+    gaugeFill.style.strokeDashoffset = '251.2';
+    gaugeNeedle.style.transform = 'rotate(-90deg)';
+    gaugeValueText.textContent = '0%';
+
+    // Reset radar
+    radarArea.setAttribute('points', '0,0 0,0 0,0 0,0 0,0');
+    radarPoints.forEach(p => { p.setAttribute('cx', '0'); p.setAttribute('cy', '0'); });
+
+    // Reset signals
+    ['sig1','sig2','sig3'].forEach(id => document.getElementById(id).classList.remove('show'));
+
+    // Reset comp bars
+    barSVS.style.width = '0%';
+    barSwegon.style.width = '0%';
+    advantageBadge.classList.remove('show');
+
+    // Reset summary
+    ['act1','act2','act3'].forEach(id => document.getElementById(id).classList.remove('show'));
+    confidenceFill.style.width = '0%';
+    confidenceValue.textContent = '0%';
+    successBanner.classList.remove('show');
+    nextStepEl.classList.remove('show');
+    btnExecute.classList.remove('clicked');
+    btnExecute.innerHTML = '&#10003; Utför alla';
+    btnExecute.disabled = false;
+    btnExecute.style.opacity = '';
+
+    // Reset timeline new dot
+    const tdot = document.getElementById('timelineCurrent');
+    tdot.classList.remove('new');
+    tdot.classList.add('active');
+  }
+
+  // ============ STEP-BASED ANIMATION ============
+  const steps = [
+    // Step 1: User sends meeting log message
+    () => {
+      addMessageNow('user',
+        'Jag hade just ett m\u00f6te med Erik Johansson p\u00e5 Castellum, 45 minuter, om deras ventilationsrenoveringsprojekt.');
+      showTypingNow();
+    },
+
+    // Step 2: Agent confirms, customer card appears
+    () => {
+      addMessageNow('agent',
+        'Noterat! M\u00f6tet \u00e4r loggat. Jag hittade kunden i CRM.');
+      waitingEl.style.display = 'none';
+      showCardNow(cardCustomer);
+    },
+
+    // Step 3: Agent asks about buy signals
+    () => {
+      showTypingNow();
+      setTimeout(() => {
+        addMessageNow('agent', 'Fick du n\u00e5gra k\u00f6psignaler fr\u00e5n kunden? &#127919;');
+      }, 400);
+    },
+
+    // Step 4: User describes buy signals
+    () => {
+      addMessageNow('user',
+        'Ja, Erik sa att de har budget avsatt f\u00f6r Q2 och vill komma ig\u00e5ng snabbt. Han fr\u00e5gade om leveranstider.');
+      showTypingNow();
+    },
+
+    // Step 5: Agent confirms buy signals, gauge + signals cards appear
+    () => {
+      addMessageNow('agent',
+        'Stark k\u00f6psignal &mdash; jag uppdaterar sannolikheten.');
+      showCardNow(cardGauge);
+      setGaugeNow(85);
+      showCardNow(cardSignals);
+      setTimeout(() => { document.getElementById('sig1').classList.add('show'); }, 100);
+      setTimeout(() => { document.getElementById('sig2').classList.add('show'); }, 400);
+      setTimeout(() => { document.getElementById('sig3').classList.add('show'); }, 700);
+    },
+
+    // Step 6: Agent asks about problems, user responds
+    () => {
+      showTypingNow();
+      setTimeout(() => {
+        addMessageNow('agent', 'Beskrev kunden n\u00e5gra problem eller utmaningar? &#128269;');
+      }, 400);
+    },
+
+    // Step 7: User describes problems, radar chart appears
+    () => {
+      addMessageNow('user',
+        'De har problem med energif\u00f6rbrukningen i tv\u00e5 \u00e4ldre fastigheter. Nuvarande system \u00e4r fr\u00e5n 90-talet. Klagom\u00e5l fr\u00e5n hyresg\u00e4ster om luftkvalitet.');
+      showTypingNow();
+      setTimeout(() => {
+        addMessageNow('agent', 'Jag kategoriserar behoven.');
+        showCardNow(cardRadar);
+        setRadarNow([9, 8, 9, 7, 8]);
+      }, 500);
+    },
+
+    // Step 8: Agent asks about competition
+    () => {
+      showTypingNow();
+      setTimeout(() => {
+        addMessageNow('agent', 'N\u00e4mnde Erik n\u00e5gra konkurrenter eller andra alternativ? &#9876;&#65039;');
+      }, 400);
+    },
+
+    // Step 9: User describes competition, competition card appears
+    () => {
+      addMessageNow('user',
+        'De har f\u00e5tt en offert fr\u00e5n Swegon men tyckte den var f\u00f6r dyr. De gillar att vi \u00e4r lokala.');
+      showTypingNow();
+      setTimeout(() => {
+        addMessageNow('agent', 'Bra intel. Vi har en prisf\u00f6rdel.');
+        showCardNow(cardCompetition);
+        barSVS.style.width = '75%';
+        barSwegon.style.width = '92%';
+        setTimeout(() => { advantageBadge.classList.add('show'); }, 500);
+      }, 500);
+    },
+
+    // Step 10: Summary card with actions
+    () => {
+      showTypingNow();
+      setTimeout(() => {
+        addMessageNow('agent', 'Baserat p\u00e5 samtalet f\u00f6resl\u00e5r jag f\u00f6ljande \u00e5tg\u00e4rder:');
+        showCardNow(cardSummary);
+        setTimeout(() => { document.getElementById('act1').classList.add('show'); }, 200);
+        setTimeout(() => { document.getElementById('act2').classList.add('show'); }, 500);
+        setTimeout(() => { document.getElementById('act3').classList.add('show'); }, 800);
+        setTimeout(() => {
+          confidenceFill.style.width = '85%';
+          animateNumber(confidenceValue, 85, '%');
+        }, 1000);
+      }, 400);
+    },
+
+    // Step 11: Auto-execute button, success state, next step
+    () => {
+      btnExecute.classList.add('clicked');
+      setTimeout(() => {
+        btnExecute.innerHTML = '&#10003; Klart!';
+        btnExecute.disabled = true;
+        btnExecute.style.opacity = '0.6';
+        successBanner.classList.add('show');
+      }, 400);
+      setTimeout(() => {
+        nextStepEl.classList.add('show');
+        const tdot = document.getElementById('timelineCurrent');
+        tdot.classList.remove('active');
+        tdot.classList.add('new');
+      }, 800);
+    }
+  ];
+
+  let currentStep = -1;
+
+  var stepNotes = [
+    "Anv\u00e4ndaren loggar ett kundm\u00f6te med en mening",
+    "AI:n bekr\u00e4ftar och visar kundkort med interaktionshistorik",
+    "AI:n st\u00e4ller proaktiv fr\u00e5ga om k\u00f6psignaler",
+    "Anv\u00e4ndaren beskriver positiva signaler",
+    "Sannolikheten h\u00f6js automatiskt \u2014 k\u00f6psignalerna dokumenteras",
+    "AI:n fr\u00e5gar om utmaningar och problem",
+    "Behovsanalysen visualiseras som radardiagram",
+    "AI:n fr\u00e5gar om konkurrenter",
+    "Konkurrensanalys med prisf\u00f6rdel identifierad",
+    "AI:n f\u00f6resl\u00e5r tre konkreta \u00e5tg\u00e4rder med prioritering",
+    "Alla \u00e5tg\u00e4rder skapas i CRM med ett klick"
+  ];
+
+  function updateStepUI() {
+    stepCounter.textContent = 'Steg ' + (currentStep + 1) + ' / ' + steps.length;
+    if (currentStep >= steps.length - 1) {
+      btnNext.innerHTML = '&#8634; B\u00f6rja om';
+    } else {
+      btnNext.innerHTML = 'N\u00e4sta &rarr;';
+    }
+    document.getElementById('stepNote').textContent = stepNotes[currentStep] || '';
+  }
+
+  function resetDemo() {
+    currentStep = -1;
+    resetAll();
+    stepCounter.textContent = 'Klicka f\u00f6r att b\u00f6rja';
+    btnNext.innerHTML = 'N\u00e4sta &rarr;';
+    document.getElementById('stepNote').textContent = '';
+  }
+
+  window.nextStep = function() {
+    // If we're at the end, reset
+    if (currentStep >= steps.length - 1) {
+      resetDemo();
+      return;
+    }
+    currentStep++;
+    steps[currentStep]();
+    updateStepUI();
+  };
+
+  // Keyboard support
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      window.nextStep();
+    }
+    if (e.key === 'r') {
+      resetDemo();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
