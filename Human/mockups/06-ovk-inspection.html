@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fältbesiktning — Groovemill</title>
+<style>
+  /* ── Reset & base ──────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:    #7C3AED;
+    --teal-dark: #6D28D9;
+    --gold:    #06B6D4;
+    --dark:    #0F172A;
+    --bg:      #f0f2f5;
+    --white:   #ffffff;
+    --panel-r: #f8fafc;
+    --text:    #1e293b;
+    --muted:   #64748b;
+    --green:   #22c55e;
+    --green-bg:#dcfce7;
+    --orange:  #f59e0b;
+    --orange-bg:#fef3c7;
+    --red:     #ef4444;
+    --red-bg:  #fef2f2;
+    --font:    system-ui, 'Segoe UI', -apple-system, sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    overflow-x: hidden;
+    padding-top: 36px;
+  }
+
+  .page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 16px;
+    gap: 20px;
+  }
+
+  /* ── Tablet frame ──────────────────────────────────── */
+  .tablet-frame {
+    width: 1024px;
+    height: 700px;
+    background: var(--white);
+    border-radius: 18px;
+    box-shadow:
+      0 0 0 2px #d1d5db,
+      0 25px 60px rgba(0,0,0,.2),
+      0 8px 24px rgba(0,0,0,.1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header bar ────────────────────────────────────── */
+  .header {
+    height: 50px;
+    background: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .gm-logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--dark);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #333;
+  }
+  .gm-logo-mark .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #06B6D4;
+  }
+  .gm-logo-mark .dot:nth-child(1) { background: #7C3AED; }
+  .gm-logo-mark .dot:nth-child(2) { background: #6366F1; }
+  .gm-logo-mark .dot:nth-child(3) { background: #3B82F6; }
+  .gm-logo-mark .dot:nth-child(4) { background: #06B6D4; }
+
+  .gm-company-name {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .header-center {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--teal);
+    letter-spacing: 0.5px;
+  }
+
+  .header-right {
+    color: #94a3b8;
+    font-size: 11px;
+    text-align: right;
+    line-height: 1.4;
+  }
+  .header-right strong { color: #cbd5e1; font-weight: 600; }
+
+  /* ── Main panels ───────────────────────────────────── */
+  .panels {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 55% 45%;
+    overflow: hidden;
+  }
+
+  .panel-left {
+    background: var(--white);
+    overflow-y: auto;
+    padding: 16px 18px;
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .panel-right {
+    background: var(--panel-r);
+    overflow-y: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ── Property info card ────────────────────────────── */
+  .property-card {
+    background: linear-gradient(135deg, #f5f3ff 0%, #f8fafc 100%);
+    border: 1px solid #ddd6fe;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+  }
+  .property-card h3 {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .property-card h3 .building-icon {
+    width: 20px; height: 20px;
+    background: var(--teal);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; font-weight: 700;
+  }
+  .prop-item {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .prop-item strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ── Checklist ─────────────────────────────────────── */
+  .checklist-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    opacity: 0;
+    transform: translateX(-15px);
+    transition: background 0.2s;
+    border: 1px solid transparent;
+  }
+  .checklist-item.visible {
+    opacity: 1;
+    transform: translateX(0);
+    animation: slideInItem 0.4s ease forwards;
+  }
+  .checklist-item:hover {
+    background: #f8fafc;
+  }
+  .checklist-item.warn {
+    background: #fffbeb;
+    border-color: #fde68a;
+  }
+
+  @keyframes slideInItem {
+    from { opacity: 0; transform: translateX(-15px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .check-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .check-icon.ok { background: var(--green); }
+  .check-icon.warn-icon { background: var(--orange); }
+  .check-icon.fail { background: var(--red); }
+
+  .check-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .check-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .check-detail {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .check-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: right;
+    white-space: nowrap;
+    min-width: 80px;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .status-badge.ok {
+    background: var(--green-bg);
+    color: #16a34a;
+  }
+  .status-badge.anm {
+    background: var(--orange-bg);
+    color: #d97706;
+  }
+  .status-badge.byt {
+    background: var(--red-bg);
+    color: var(--red);
+  }
+
+  /* ── Gauge ─────────────────────────────────────────── */
+  .gauge-wrap {
+    width: 68px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+  .gauge-wrap svg { display: block; }
+
+  /* ── Summary bar ───────────────────────────────────── */
+  .summary-bar {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .summary-bar.visible {
+    opacity: 1;
+    transform: translateY(0);
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .summary-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .summary-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .result-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+  }
+  .result-badge.anm-result {
+    background: var(--orange-bg);
+    color: #d97706;
+    border: 1px solid #fde68a;
+  }
+  .mini-bar {
+    display: flex;
+    gap: 2px;
+    height: 20px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .mini-bar .seg {
+    flex: 1;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+  }
+  .mini-bar .seg.g { background: var(--green); }
+  .mini-bar .seg.o { background: var(--orange); }
+  .mini-bar .seg.r { background: var(--red); }
+
+  /* ── Right panel: AI chat ──────────────────────────── */
+  .ai-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ai-section-title .ai-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--teal);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+  }
+
+  .chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .chat-msg {
+    padding: 8px 11px;
+    border-radius: 10px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    max-width: 95%;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .chat-msg.visible {
+    opacity: 1;
+    transform: translateY(0);
+    animation: fadeUp 0.35s ease forwards;
+  }
+  .chat-msg.agent {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    align-self: flex-start;
+    border-bottom-left-radius: 3px;
+    color: var(--text);
+  }
+  .chat-msg.user {
+    background: var(--teal);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 3px;
+  }
+  .chat-msg .msg-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    opacity: 0.7;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Report preview ────────────────────────────────── */
+  .report-preview {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    opacity: 0;
+    transform: translateY(10px);
+    flex-shrink: 0;
+  }
+  .report-preview.visible {
+    opacity: 1;
+    transform: translateY(0);
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .report-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--teal);
+  }
+  .report-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 1px;
+  }
+  .report-logo-mini {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .report-logo-mini .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #06B6D4;
+  }
+  .report-logo-mini .dot:nth-child(1) { background: #7C3AED; }
+  .report-logo-mini .dot:nth-child(2) { background: #6366F1; }
+  .report-logo-mini .dot:nth-child(3) { background: #3B82F6; }
+  .report-logo-mini .dot:nth-child(4) { background: #06B6D4; }
+
+  .report-section {
+    margin-bottom: 8px;
+  }
+  .report-section h4 {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+  .report-section p, .report-section li {
+    font-size: 10.5px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .report-section ul {
+    list-style: none;
+    padding: 0;
+  }
+  .report-section li::before {
+    content: "- ";
+    color: var(--muted);
+  }
+
+  .report-results-mini {
+    display: flex;
+    gap: 3px;
+    margin: 4px 0;
+  }
+  .report-results-mini .mini-result {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .mini-result.ok-r { background: var(--green); }
+  .mini-result.fail-r { background: var(--orange); }
+  .mini-result.fail-red { background: var(--red); }
+
+  .report-status {
+    text-align: center;
+    padding: 6px;
+    background: var(--orange-bg);
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #d97706;
+    letter-spacing: 0.5px;
+    margin: 8px 0;
+  }
+
+  .btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-export:hover { background: var(--teal-dark); }
+
+  .distribution-section {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed #e2e8f0;
+    opacity: 0;
+  }
+  .distribution-section.visible {
+    opacity: 1;
+    animation: fadeUp 0.4s ease forwards;
+  }
+  .dist-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    padding: 2px 0;
+    color: var(--text);
+  }
+  .dist-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: var(--green-bg);
+    color: #16a34a;
+  }
+
+  /* ── Bottom action bar ─────────────────────────────── */
+  .action-bar {
+    background: var(--dark);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    opacity: 0;
+    transform: translateY(10px);
+    flex-shrink: 0;
+  }
+  .action-bar.visible {
+    opacity: 1;
+    transform: translateY(0);
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .action-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    color: #e2e8f0;
+    white-space: nowrap;
+  }
+  .action-item .action-check {
+    color: var(--green);
+    font-weight: 700;
+  }
+  .action-summary-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background: rgba(124, 58, 237, 0.15);
+    color: var(--teal);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    white-space: nowrap;
+  }
+
+  /* ── Footer ───────────────────────────────────────── */
+  .footer-text {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* ── Scrollbar styling ─────────────────────────────── */
+  .panel-left::-webkit-scrollbar,
+  .panel-right::-webkit-scrollbar,
+  .chat-messages::-webkit-scrollbar {
+    width: 4px;
+  }
+  .panel-left::-webkit-scrollbar-thumb,
+  .panel-right::-webkit-scrollbar-thumb,
+  .chat-messages::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+.gm-global-header{position:fixed;top:0;left:0;right:0;height:36px;background:#0F172A;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:9999;font-family:system-ui,-apple-system,sans-serif}
+.gm-global-header .gm-logo-dots{display:flex;gap:4px;margin-right:8px}
+.gm-global-header .gm-logo-dots span{width:8px;height:8px;border-radius:50%;background:#06B6D4}
+.gm-global-header .gm-logo-dots span:nth-child(1){background:#7C3AED}
+.gm-global-header .gm-logo-dots span:nth-child(2){background:#6366F1}
+.gm-global-header .gm-logo-dots span:nth-child(3){background:#3B82F6}
+.gm-global-header .gm-logo-dots span:nth-child(4){background:#06B6D4}
+.gm-global-header .gm-left{display:flex;align-items:center}
+.gm-global-header .gm-brand-text{color:#fff;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+.gm-global-header .gm-right{color:#7C3AED;font-size:11px;font-weight:700}
+
+/* ── Step controls (click-to-advance) ──────────────── */
+.step-controls{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;z-index:9998;background:rgba(30,41,59,0.95);padding:10px 24px;border-radius:30px;box-shadow:0 4px 20px rgba(0,0,0,0.3);backdrop-filter:blur(8px);flex-wrap:wrap;justify-content:center}
+.step-controls button{background:#7C3AED;color:#fff;border:none;padding:8px 24px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s}
+.step-controls button:hover{background:#6D28D9}
+#stepCounter{color:rgba(255,255,255,0.7);font-size:13px;font-weight:300;min-width:120px}
+.step-note{width:100%;text-align:center;color:rgba(255,255,255,0.5);font-size:12px;font-style:italic;line-height:1.3;margin-top:2px}
+
+/* ── Voice FAB (bottom-left) ───────────────────────── */
+.voice-fab{position:fixed;bottom:20px;left:20px;z-index:9998;cursor:pointer}
+.voice-fab-icon{width:48px;height:48px;border-radius:50%;background:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(124,58,237,0.4);transition:transform 0.2s}
+.voice-fab:hover .voice-fab-icon{transform:scale(1.1)}
+.voice-fab-tooltip{position:absolute;bottom:56px;left:0;background:#1e293b;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.voice-fab.open .voice-fab-tooltip{opacity:1;pointer-events:auto}
+</style>
+</head>
+<body>
+<div class="gm-global-header"><div class="gm-left"><div class="gm-logo-dots"><span></span><span></span><span></span><span></span></div><span class="gm-brand-text">Groovemill</span></div><div class="gm-right">AI-First CRM</div></div>
+
+<div class="page">
+
+  <!-- ── Tablet Frame ─────────────────────────────────── -->
+  <div class="tablet-frame">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="gm-logo-mark">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <span class="gm-company-name">Groovemill</span>
+      </div>
+      <div class="header-center">Fältbesiktning</div>
+      <div class="header-right">
+        <strong>Tekniker:</strong> Anna Lindberg<br>
+        <strong>Datum:</strong> 2026-03-02
+      </div>
+    </div>
+
+    <!-- Panels -->
+    <div class="panels">
+
+      <!-- ── LEFT PANEL: Inspection Checklist ──────────── -->
+      <div class="panel-left">
+        <!-- Property card -->
+        <div class="property-card">
+          <h3>
+            <span class="building-icon">B</span>
+            BRF Solgatan 14
+          </h3>
+          <div class="prop-item"><strong>Adress:</strong> Solgatan 14, 112 34 Stockholm</div>
+          <div class="prop-item"><strong>Anläggningstyp:</strong> Klimatsystem (värme/kyla)</div>
+          <div class="prop-item"><strong>Installerat:</strong> 1998</div>
+          <div class="prop-item"><strong>Senaste besiktning:</strong> 2023-03-15</div>
+        </div>
+
+        <div class="checklist-title">Kontrollpunkter</div>
+
+        <!-- 1. Temperatur Zon 1 -->
+        <div class="checklist-item" data-delay="1000" id="ci1">
+          <div class="check-icon ok">&#10003;</div>
+          <div class="check-info">
+            <div class="check-name">Temperatur &mdash; Zon 1</div>
+            <div class="check-detail">Riktvärde: 21&deg;C &plusmn;2</div>
+          </div>
+          <div class="gauge-wrap" id="gauge1"></div>
+          <div class="check-value">22&deg;C</div>
+          <span class="status-badge ok">&#10003; OK</span>
+        </div>
+
+        <!-- 2. Temperatur Zon 2 -->
+        <div class="checklist-item" data-delay="2500" id="ci2">
+          <div class="check-icon ok">&#10003;</div>
+          <div class="check-info">
+            <div class="check-name">Temperatur &mdash; Zon 2</div>
+            <div class="check-detail">Riktvärde: 21&deg;C &plusmn;2</div>
+          </div>
+          <div class="gauge-wrap" id="gauge2"></div>
+          <div class="check-value">21&deg;C</div>
+          <span class="status-badge ok">&#10003; OK</span>
+        </div>
+
+        <!-- 3. Driftström Enhet A -->
+        <div class="checklist-item" data-delay="4000" id="ci3">
+          <div class="check-icon ok">&#10003;</div>
+          <div class="check-info">
+            <div class="check-name">Driftström &mdash; Enhet A</div>
+            <div class="check-detail">Riktvärde: 15 A</div>
+          </div>
+          <div class="gauge-wrap" id="gauge3"></div>
+          <div class="check-value">14.2 A</div>
+          <span class="status-badge ok">&#10003; OK</span>
+        </div>
+
+        <!-- 4. Driftström Enhet B (FAIL) -->
+        <div class="checklist-item warn" data-delay="5500" id="ci4">
+          <div class="check-icon warn-icon">!</div>
+          <div class="check-info">
+            <div class="check-name">Driftström &mdash; Enhet B</div>
+            <div class="check-detail">Riktvärde: 10 A &mdash; UNDER GRÄNSVÄRDE</div>
+          </div>
+          <div class="gauge-wrap" id="gauge4"></div>
+          <div class="check-value">6 A</div>
+          <span class="status-badge anm">&#9888; Anm&auml;rkning</span>
+        </div>
+
+        <!-- 5. Energieffektivitet -->
+        <div class="checklist-item" data-delay="7000" id="ci5">
+          <div class="check-icon ok">&#10003;</div>
+          <div class="check-info">
+            <div class="check-name">Energieffektivitet</div>
+            <div class="check-detail">Min: 50% verkningsgrad</div>
+          </div>
+          <div class="gauge-wrap" id="gauge5"></div>
+          <div class="check-value">72%</div>
+          <span class="status-badge ok">&#10003; OK</span>
+        </div>
+
+        <!-- 6. Servicekomponent (FAIL) -->
+        <div class="checklist-item warn" data-delay="8500" id="ci6">
+          <div class="check-icon fail">&#10007;</div>
+          <div class="check-info">
+            <div class="check-name">Servicekomponent &mdash; Primär</div>
+            <div class="check-detail">Kraftigt sliten</div>
+          </div>
+          <div class="gauge-wrap"></div>
+          <div class="check-value">Sliten</div>
+          <span class="status-badge byt">&#10007; BYT</span>
+        </div>
+
+        <!-- 7. Säkerhetssystem -->
+        <div class="checklist-item" data-delay="10000" id="ci7">
+          <div class="check-icon ok">&#10003;</div>
+          <div class="check-info">
+            <div class="check-name">Säkerhetssystem</div>
+            <div class="check-detail">Alla funktioner korrekt</div>
+          </div>
+          <div class="gauge-wrap"></div>
+          <div class="check-value">OK</div>
+          <span class="status-badge ok">&#10003; OK</span>
+        </div>
+
+        <!-- 8. Vibrationsnivå (FAIL) -->
+        <div class="checklist-item warn" data-delay="11500" id="ci8">
+          <div class="check-icon warn-icon">!</div>
+          <div class="check-info">
+            <div class="check-name">Vibrationsnivå &mdash; Enhet A</div>
+            <div class="check-detail">Max: 4.5 mm/s &mdash; ÖVER GRÄNSVÄRDE</div>
+          </div>
+          <div class="gauge-wrap" id="gauge8"></div>
+          <div class="check-value">5.2 mm/s</div>
+          <span class="status-badge anm">&#9888; Anm&auml;rkning</span>
+        </div>
+
+        <!-- 9. Röranslutningar -->
+        <div class="checklist-item" data-delay="13000" id="ci9">
+          <div class="check-icon ok">&#10003;</div>
+          <div class="check-info">
+            <div class="check-name">Röranslutningar</div>
+            <div class="check-detail">Inget läckage detekterat</div>
+          </div>
+          <div class="gauge-wrap"></div>
+          <div class="check-value">OK</div>
+          <span class="status-badge ok">&#10003; OK</span>
+        </div>
+
+        <!-- 10. Utrustning allmänt -->
+        <div class="checklist-item" data-delay="14500" id="ci10">
+          <div class="check-icon ok">&#10003;</div>
+          <div class="check-info">
+            <div class="check-name">Utrustning &mdash; Allmänt skick</div>
+            <div class="check-detail">Normalt slitage</div>
+          </div>
+          <div class="gauge-wrap"></div>
+          <div class="check-value">OK</div>
+          <span class="status-badge ok">&#10003; OK</span>
+        </div>
+
+        <!-- Summary bar -->
+        <div class="summary-bar" id="summaryBar">
+          <div class="summary-top">
+            <span class="summary-text">7 av 10 godkända &nbsp;|&nbsp; 3 anmärkningar</span>
+            <span class="result-badge anm-result">GODKÄND MED ANMÄRKNINGAR</span>
+          </div>
+          <div class="mini-bar">
+            <div class="seg g">&#10003;</div><div class="seg g">&#10003;</div><div class="seg g">&#10003;</div>
+            <div class="seg g">&#10003;</div><div class="seg g">&#10003;</div><div class="seg g">&#10003;</div>
+            <div class="seg g">&#10003;</div><div class="seg o">&#9888;</div><div class="seg r">&#10007;</div>
+            <div class="seg o">&#9888;</div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:4px;font-size:9px;color:var(--muted);">
+            <span><span style="color:var(--green);font-weight:700;">&#10003;</span> Godk&auml;nd (7)</span>
+            <span><span style="color:var(--orange);font-weight:700;">&#9888;</span> Anm&auml;rkning (2)</span>
+            <span><span style="color:var(--red);font-weight:700;">&#10007;</span> Byt/&Aring;tg&auml;rd (1)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RIGHT PANEL: AI + Report ──────────────────── -->
+      <div class="panel-right">
+
+        <!-- AI Assistant Chat -->
+        <div>
+          <div class="ai-section-title">
+            <span class="ai-dot"></span>
+            AI-Assistent &mdash; Live
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <!-- Messages inserted by JS -->
+          </div>
+        </div>
+
+        <!-- Report Preview -->
+        <div class="report-preview" id="reportPreview">
+          <div class="report-header">
+            <span class="report-title">BESIKTNINGSPROTOKOLL</span>
+            <div class="report-logo-mini">
+              <div class="dot"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div>
+            </div>
+          </div>
+          <div class="report-section">
+            <h4>Fastighet</h4>
+            <p>BRF Solgatan 14 &mdash; Solgatan 14, 112 34 Stockholm<br>Anläggning: Klimatsystem, installerat 1998</p>
+          </div>
+          <div class="report-section">
+            <h4>Resultat</h4>
+            <div class="report-results-mini" id="reportResults">
+              <!-- filled by JS -->
+            </div>
+          </div>
+          <div class="report-section">
+            <h4>Anmärkningar</h4>
+            <ul id="reportAnm">
+              <li>Driftström enhet B: 6 A (krav 10) &mdash; prestandaproblem rapporterat</li>
+              <li>Servicekomponent primär: Kraftigt sliten &mdash; omedelbart byte krävs</li>
+              <li>Vibrationsnivå enhet A: 5.2 mm/s (max 4.5) &mdash; kontrolleras efter komponentbyte</li>
+            </ul>
+          </div>
+          <div class="report-section">
+            <h4>Åtgärder</h4>
+            <ul>
+              <li>Justera/byt komponent enhet B + kontrollera anslutning</li>
+              <li>Komponentbyte primär (arbetsorder skapad)</li>
+              <li>Ommätning vibration efter komponentbyte</li>
+            </ul>
+          </div>
+          <div class="report-status">GODKÄND MED ANMÄRKNINGAR</div>
+          <button class="btn-export" onclick="void(0)">&#128196; Exportera PDF</button>
+
+          <!-- Distribution (appears later) -->
+          <div class="distribution-section" id="distSection">
+            <h4 style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Distribution</h4>
+            <div class="dist-row">
+              <span>Fastighetsägare</span>
+              <span class="dist-badge">Klar</span>
+            </div>
+            <div class="dist-row">
+              <span>BRF Solgatan (styrelse)</span>
+              <span class="dist-badge">Klar</span>
+            </div>
+            <div class="dist-row">
+              <span>Groovemill intern (CRM)</span>
+              <span class="dist-badge">Klar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom action bar -->
+    <div class="action-bar" id="actionBar">
+      <div class="action-item"><span class="action-check">&#10003;</span> Besiktningsprotokoll genererat</div>
+      <div class="action-item"><span class="action-check">&#10003;</span> 3 anmärkningar dokumenterade</div>
+      <div class="action-item"><span class="action-check">&#10003;</span> Arbetsorder: Komponentbyte (serviceteam 2)</div>
+      <div class="action-item"><span class="action-check">&#10003;</span> Ny affärsmöjlighet: Uppgradering 380k</div>
+      <div class="action-item"><span class="action-check">&#10003;</span> Köpsignal registrerad</div>
+      <span class="action-summary-badge">5 åtgärder automatiskt skapade i CRM</span>
+    </div>
+  </div>
+
+  <span class="footer-text" style="font-size:12px;color:var(--muted);font-weight:500;">AI-First CRM &mdash; Mockup Demo</span>
+</div>
+
+<!-- Step controls (fixed bottom-center) -->
+<div class="step-controls">
+  <button id="btnNext" onclick="nextStep()">N&auml;sta &rarr;</button>
+  <span id="stepCounter">Klicka f&ouml;r att b&ouml;rja</span>
+  <div id="stepNote" class="step-note"></div>
+</div>
+
+<!-- Voice FAB (fixed bottom-left) -->
+<div class="voice-fab" id="voiceFab" onclick="this.classList.toggle('open')">
+  <div class="voice-fab-icon">&#128222;</div>
+  <div class="voice-fab-tooltip"><strong>Ring CRM-assistenten</strong><br>+46 8 123 45 67<br><span style="font-size:11px;opacity:0.7">Identifiera med BankID</span></div>
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  /* ── Gauge SVG builder ────────────────────────────── */
+  function buildGauge(containerId, measured, target, maxScale) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    var max = maxScale || target * 1.5;
+    var ratio = measured / target;
+    var angle = Math.min((measured / max) * 180, 180);
+
+    var color;
+    if (ratio >= 0.8 && ratio <= 1.2) color = "#22c55e";
+    else if (ratio >= 0.6 && ratio <= 1.4) color = "#f59e0b";
+    else color = "#ef4444";
+
+    var warnLowDeg = Math.max((target * 0.6 / max) * 180, 0);
+    var okStartDeg = Math.max((target * 0.8 / max) * 180, 0);
+    var okEndDeg   = Math.min((target * 1.2 / max) * 180, 180);
+    var warnHighDeg = Math.min((target * 1.4 / max) * 180, 180);
+
+    var svg = '<svg viewBox="0 0 70 40" width="68" height="42">';
+    svg += '<path d="M6,32 A26,26 0 0,1 64,32" fill="none" stroke="#e2e8f0" stroke-width="5" stroke-linecap="round"/>';
+    svg += drawArcG(0, warnLowDeg, "#fecaca", 4.5);
+    if (warnHighDeg < 180) svg += drawArcG(warnHighDeg, 180, "#fecaca", 4.5);
+    svg += drawArcG(warnLowDeg, okStartDeg, "#fde68a", 4.5);
+    svg += drawArcG(okEndDeg, warnHighDeg, "#fde68a", 4.5);
+    svg += drawArcG(okStartDeg, okEndDeg, "#bbf7d0", 4.5);
+
+    function labelPos(deg, rOffset) {
+      var rad = (180 - deg) * Math.PI / 180;
+      var r = 26 + (rOffset || 7);
+      return { x: 35 + r * Math.cos(rad), y: 32 - r * Math.sin(rad) };
+    }
+
+    var felPos = labelPos(warnLowDeg / 2, 8);
+    svg += '<text x="' + felPos.x.toFixed(1) + '" y="' + felPos.y.toFixed(1) + '" font-size="5" font-weight="700" fill="#ef4444" text-anchor="middle">Fel</text>';
+    var varnLowPos = labelPos((warnLowDeg + okStartDeg) / 2, 8);
+    svg += '<text x="' + varnLowPos.x.toFixed(1) + '" y="' + varnLowPos.y.toFixed(1) + '" font-size="4.5" font-weight="600" fill="#d97706" text-anchor="middle">Varn.</text>';
+    var okPos = labelPos((okStartDeg + okEndDeg) / 2, 8);
+    svg += '<text x="' + okPos.x.toFixed(1) + '" y="' + okPos.y.toFixed(1) + '" font-size="5.5" font-weight="700" fill="#16a34a" text-anchor="middle">OK</text>';
+    if (warnHighDeg < 178) {
+      var varnHighPos = labelPos((okEndDeg + warnHighDeg) / 2, 8);
+      svg += '<text x="' + varnHighPos.x.toFixed(1) + '" y="' + varnHighPos.y.toFixed(1) + '" font-size="4.5" font-weight="600" fill="#d97706" text-anchor="middle">Varn.</text>';
+    }
+
+    var needleAngle = 180 - angle;
+    var rad = needleAngle * Math.PI / 180;
+    var nx = 35 + 22 * Math.cos(rad);
+    var ny = 32 - 22 * Math.sin(rad);
+    svg += '<line x1="35" y1="32" x2="' + nx.toFixed(1) + '" y2="' + ny.toFixed(1) + '" stroke="' + color + '" stroke-width="2" stroke-linecap="round">';
+    svg += '<animate attributeName="x2" from="35" to="' + nx.toFixed(1) + '" dur="0.6s" fill="freeze"/>';
+    svg += '<animate attributeName="y2" from="32" to="' + ny.toFixed(1) + '" dur="0.6s" fill="freeze"/>';
+    svg += '</line>';
+    svg += '<circle cx="35" cy="32" r="3" fill="' + color + '"/>';
+    svg += '</svg>';
+    el.innerHTML = svg;
+  }
+
+  /* drawArcG: gauge arc helper for the larger viewBox (cx=35, cy=32, r=26) */
+  function drawArcG(startDeg, endDeg, col, sw) {
+    if (endDeg - startDeg < 0.5) return '';
+    var r = 26;
+    var cx = 35, cy = 32;
+    function pt(deg) {
+      var rad = (180 - deg) * Math.PI / 180;
+      return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+    }
+    var s = pt(startDeg);
+    var e = pt(endDeg);
+    var large = (endDeg - startDeg) > 180 ? 1 : 0;
+    return '<path d="M' + s.x.toFixed(1) + ',' + s.y.toFixed(1) +
+      ' A' + r + ',' + r + ' 0 ' + large + ',0 ' +
+      e.x.toFixed(1) + ',' + e.y.toFixed(1) + '"' +
+      ' fill="none" stroke="' + col + '" stroke-width="' + sw + '"/>';
+  }
+
+  /* ── Report results mini-icons ────────────────────── */
+  function buildReportResults() {
+    var cont = document.getElementById("reportResults");
+    if (!cont) return;
+    var statuses = ["ok","ok","ok","fail","ok","fail-red","ok","fail","ok","ok"];
+    var labels   = ["Z1","Z2","EA","EB","Ef","Sk","S\u00e4","Vi","R\u00f6","Ut"];
+    cont.innerHTML = "";
+    for (var i = 0; i < statuses.length; i++) {
+      var cls = statuses[i] === "ok" ? "ok-r" :
+                statuses[i] === "fail-red" ? "fail-red" : "fail-r";
+      var sym = statuses[i] === "ok" ? "&#10003;" : "&#10007;";
+      var d = document.createElement("div");
+      d.className = "mini-result " + cls;
+      d.title = labels[i];
+      d.innerHTML = sym;
+      cont.appendChild(d);
+    }
+  }
+
+  /* ── Chat message helper ──────────────────────────── */
+  function addChatMsg(role, text) {
+    var chatContainer = document.getElementById("chatMessages");
+    var div = document.createElement("div");
+    div.className = "chat-msg " + role;
+    var label = role === "agent" ? "AI" : "Anna";
+    div.innerHTML = '<div class="msg-label">' + label + '</div>' + text;
+    chatContainer.appendChild(div);
+    requestAnimationFrame(function() {
+      div.classList.add("visible");
+    });
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  /* ── Show checklist items with staggered animation ── */
+  function showCheckItems(ids) {
+    for (var i = 0; i < ids.length; i++) {
+      (function(idx) {
+        var el = document.getElementById(ids[idx]);
+        if (!el) return;
+        setTimeout(function() {
+          el.classList.add("visible");
+          el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }, idx * 400);
+      })(i);
+    }
+  }
+
+  /* ── Step definitions (11 steps) ──────────────────── */
+  var TOTAL_STEPS = 11;
+  var currentStep = 0;
+
+  var stepActions = [
+    /* Step 1: Property info + Temperatur Zon 1 & 2 (OK) */
+    function() {
+      showCheckItems(["ci1", "ci2"]);
+      setTimeout(function() { buildGauge("gauge1", 22, 21, 31.5); }, 200);
+      setTimeout(function() { buildGauge("gauge2", 21, 21, 31.5); }, 600);
+      addChatMsg("agent", "Bra start \u2014 temperaturv\u00e4rdena ser bra ut! B\u00e5da zonerna ligger v\u00e4l inom gr\u00e4nsv\u00e4rdena.");
+    },
+
+    /* Step 2: Driftstr\u00f6m Enhet A (OK) + Enhet B (ANM\u00c4RKNING) + AI asks about prestanda */
+    function() {
+      showCheckItems(["ci3", "ci4"]);
+      setTimeout(function() { buildGauge("gauge3", 14.2, 15, 22.5); }, 200);
+      setTimeout(function() { buildGauge("gauge4", 6, 10, 15); }, 600);
+      setTimeout(function() {
+        addChatMsg("agent", "\u26a0\ufe0f Driftstr\u00f6m enhet B \u00e4r under gr\u00e4nsv\u00e4rdet (6 A mot krav 10). Har kunden rapporterat n\u00e5gra prestandaproblem?");
+      }, 800);
+    },
+
+    /* Step 3: User confirms problem, AI responds */
+    function() {
+      addChatMsg("user", "Ja, klagom\u00e5l p\u00e5 ojämn prestanda");
+      setTimeout(function() {
+        addChatMsg("agent", "Noterat. Jag l\u00e4gger till prestandaproblem som orsak i anm\u00e4rkningen. Rekommendation: Justera/byt komponent + kontrollera anslutningen.");
+      }, 600);
+    },
+
+    /* Step 4: Energieffektivitet (OK) + Servicekomponent (BYT!) + AI suggests work order */
+    function() {
+      showCheckItems(["ci5", "ci6"]);
+      setTimeout(function() { buildGauge("gauge5", 72, 50, 100); }, 200);
+      setTimeout(function() {
+        addChatMsg("agent", "Servicekomponenten beh\u00f6ver bytas omedelbart. Vill du skapa en arbetsorder?");
+      }, 800);
+    },
+
+    /* Step 5: User confirms, work order created */
+    function() {
+      addChatMsg("user", "Ja");
+      setTimeout(function() {
+        addChatMsg("agent", "\u2705 Arbetsorder skapad: Komponentbyte BRF Solgatan \u2014 tilldelad serviceteam 2.");
+      }, 600);
+    },
+
+    /* Step 6: S\u00e4kerhetssystem (OK) + Vibrationsniv\u00e5 (ANM\u00c4RKNING) + AI comments on correlation */
+    function() {
+      showCheckItems(["ci7", "ci8"]);
+      setTimeout(function() { buildGauge("gauge8", 5.2, 4.5, 6.75); }, 600);
+      setTimeout(function() {
+        addChatMsg("agent", "Vibrationsniv\u00e5n p\u00e5 enhet A ligger 0.7 mm/s \u00f6ver gr\u00e4nsen. Det kan bero p\u00e5 den slitna komponenten \u2014 efter byte b\u00f6r ni m\u00e4ta om.");
+      }, 800);
+    },
+
+    /* Step 7: R\u00f6ranslutningar + Utrustning (both OK) */
+    function() {
+      showCheckItems(["ci9", "ci10"]);
+    },
+
+    /* Step 8: Summary bar + AI asks about upgrade interest */
+    function() {
+      document.getElementById("summaryBar").classList.add("visible");
+      addChatMsg("agent", "Fick du intryck av att styrelsen \u00e4r intresserade av en uppgradering av anl\u00e4ggningen? Den \u00e4r 28 \u00e5r gammal.");
+    },
+
+    /* Step 9: User confirms, AI creates aff\u00e4rsm\u00f6jlighet (380k) */
+    function() {
+      addChatMsg("user", "Ja, de fr\u00e5gade om kostnader");
+      setTimeout(function() {
+        addChatMsg("agent", "\ud83d\udcc8 K\u00f6psignal noterad! Jag skapar en aff\u00e4rsm\u00f6jlighet: \u201cAnl\u00e4ggningsuppgradering BRF Solgatan\u201d \u2014 estimerat v\u00e4rde baserat p\u00e5 liknande projekt: 380 000 kr.");
+      }, 600);
+    },
+
+    /* Step 10: Report preview + distribution */
+    function() {
+      var rp = document.getElementById("reportPreview");
+      rp.classList.add("visible");
+      buildReportResults();
+      setTimeout(function() {
+        document.getElementById("distSection").classList.add("visible");
+        document.querySelector(".panel-right").scrollTop = document.querySelector(".panel-right").scrollHeight;
+      }, 600);
+    },
+
+    /* Step 11: Final action summary bar */
+    function() {
+      document.getElementById("actionBar").classList.add("visible");
+    }
+  ];
+
+  /* ── Step notes ───────────────────────────────────── */
+  var stepNotes = [
+    "F\u00f6rsta kontrollpunkterna \u2014 temperatur godk\u00e4nd",
+    "Driftstr\u00f6m enhet B UNDER gr\u00e4nsv\u00e4rdet \u2014 AI fr\u00e5gar om prestandaproblem",
+    "Bekr\u00e4ftat: oj\u00e4mn prestanda. AI dokumenterar orsak och l\u00f6sning",
+    "Servicekomponent beh\u00f6ver bytas \u2014 AI f\u00f6resl\u00e5r arbetsorder",
+    "Arbetsorder skapad automatiskt till serviceteam 2",
+    "Vibrationsniv\u00e5 \u00f6ver gr\u00e4nsen \u2014 AI kopplar till den slitna komponenten",
+    "Sista kontrollpunkterna \u2014 alla godk\u00e4nda",
+    "Sammanfattning: 7 av 10 OK, 3 anm\u00e4rkningar. AI fr\u00e5gar om uppgradering",
+    "K\u00f6psignal! AI skapar aff\u00e4rsm\u00f6jlighet v\u00e4rd 380 000 kr",
+    "Besiktningsprotokoll genererat med distribution till \u00e4gare och styrelse",
+    "5 \u00e5tg\u00e4rder skapade automatiskt i CRM fr\u00e5n en enda besiktning"
+  ];
+
+  /* ── Step counter display update ──────────────────── */
+  function updateStepCounter() {
+    var counter = document.getElementById("stepCounter");
+    var btn = document.getElementById("btnNext");
+    var noteEl = document.getElementById('stepNote');
+    if (currentStep === 0) {
+      counter.textContent = "Klicka f\u00f6r att b\u00f6rja";
+      btn.textContent = "N\u00e4sta \u2192";
+      noteEl.textContent = '';
+    } else if (currentStep >= TOTAL_STEPS) {
+      counter.textContent = "Steg " + TOTAL_STEPS + " av " + TOTAL_STEPS + " \u2014 Klar!";
+      btn.textContent = "\u21bb B\u00f6rja om";
+      noteEl.textContent = stepNotes[currentStep - 1] || '';
+    } else {
+      counter.textContent = "Steg " + currentStep + " av " + TOTAL_STEPS;
+      btn.textContent = "N\u00e4sta \u2192";
+      noteEl.textContent = stepNotes[currentStep - 1] || '';
+    }
+  }
+
+  /* ── Reset everything to initial state ────────────── */
+  function resetAll() {
+    currentStep = 0;
+
+    var checkItems = document.querySelectorAll(".checklist-item[data-delay]");
+    for (var i = 0; i < checkItems.length; i++) {
+      checkItems[i].classList.remove("visible");
+    }
+
+    document.getElementById("summaryBar").classList.remove("visible");
+    document.getElementById("reportPreview").classList.remove("visible");
+    document.getElementById("distSection").classList.remove("visible");
+    document.getElementById("actionBar").classList.remove("visible");
+    document.getElementById("chatMessages").innerHTML = "";
+    document.getElementById("reportResults").innerHTML = "";
+
+    var gaugeIds = ["gauge1","gauge2","gauge3","gauge4","gauge5","gauge8"];
+    for (var g = 0; g < gaugeIds.length; g++) {
+      var gel = document.getElementById(gaugeIds[g]);
+      if (gel) gel.innerHTML = "";
+    }
+
+    document.querySelector(".panel-left").scrollTop = 0;
+    document.querySelector(".panel-right").scrollTop = 0;
+
+    updateStepCounter();
+  }
+
+  /* ── Advance to next step (or reset if finished) ──── */
+  function advanceStep() {
+    if (currentStep >= TOTAL_STEPS) {
+      resetAll();
+      return;
+    }
+    stepActions[currentStep]();
+    currentStep++;
+    updateStepCounter();
+  }
+
+  /* ── Expose to global scope ───────────────────────── */
+  window.nextStep = advanceStep;
+
+  /* ── Keyboard controls ────────────────────────────── */
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "ArrowRight" || e.key === " ") {
+      e.preventDefault();
+      advanceStep();
+    } else if (e.key === "r" || e.key === "R") {
+      resetAll();
+    }
+  });
+
+  /* ── Initial state on load ────────────────────────── */
+  resetAll();
+})();
+</script>
+
+</body>
+</html>

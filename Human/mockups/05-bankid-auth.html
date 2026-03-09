@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BankID Auth + Voice CRM Dashboard</title>
+<style>
+/* ── Reset & Base ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#7C3AED;--teal-dark:#6D28D9;--teal-light:#c4b5fd;--teal-bg:rgba(124,58,237,.08);
+  --purple:#7B61FF;--purple-light:#c4b5fd;
+  --dark:#0f172a;--dark2:#1e293b;--dark3:#334155;
+  --light:#f8fafc;--light2:#e2e8f0;--light3:#cbd5e1;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --green:#22c55e;--green-light:#bbf7d0;
+  --red:#ef4444;--orange:#f97316;
+  --font:system-ui,'Segoe UI',sans-serif;
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
+}
+html{font-size:16px}
+body{
+  font-family:var(--font);background:var(--light);color:#fff;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow-x:hidden;transition:background .8s ease;padding-top:36px;
+}
+body.dashboard-mode{background:var(--light);color:var(--text)}
+
+/* ── Phone Frame ── */
+.phone-frame{
+  position:relative;width:375px;height:700px;
+  background:var(--dark);border:3px solid #334155;border-radius:40px;
+  overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,.5);
+  transition:all 1s cubic-bezier(.4,0,.2,1);
+}
+.phone-frame.expanding{
+  width:min(1100px,95vw);height:auto;min-height:90vh;
+  border-radius:16px;border-color:var(--light2);
+  box-shadow:0 8px 40px rgba(0,0,0,.1);
+}
+.phone-notch{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:150px;height:28px;background:var(--dark);border-radius:0 0 20px 20px;z-index:20;
+  transition:opacity .5s;
+}
+.expanding .phone-notch{opacity:0}
+.phone-content{
+  position:relative;width:100%;height:100%;
+  display:flex;flex-direction:column;
+}
+
+/* ── Auth Screens (shared) ── */
+.auth-screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px 30px;
+  opacity:0;transition:opacity .4s ease;pointer-events:none;
+  background:var(--dark);
+}
+.auth-screen.active{opacity:1;pointer-events:auto}
+
+.gm-dots-auth{display:inline-flex;gap:4px;background:#0F172A;padding:4px 6px;border-radius:3px;margin-bottom:8px}
+.gm-dots-auth span{width:10px;height:10px;border-radius:50%;background:#06B6D4}
+.gm-dots-auth span:nth-child(1){background:#7C3AED}
+.gm-dots-auth span:nth-child(2){background:#6366F1}
+.gm-dots-auth span:nth-child(3){background:#3B82F6}
+.gm-dots-auth span:nth-child(4){background:#06B6D4}
+.auth-brand{font-size:13px;color:var(--teal);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;text-align:center}
+.auth-title{font-size:22px;font-weight:700;margin-bottom:4px;text-align:center}
+.auth-subtitle{font-size:14px;color:var(--text3);text-align:center;margin-bottom:24px}
+
+/* ── Screen 1: Dial ── */
+.dial-number{font-size:28px;font-weight:300;letter-spacing:3px;margin-bottom:8px;color:#fff}
+.call-btn{
+  width:64px;height:64px;border-radius:50%;background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  margin-top:20px;cursor:pointer;transition:transform .15s;
+  animation:callPulse 1s ease-in-out infinite;
+}
+.call-btn svg{width:28px;height:28px;fill:#fff}
+@keyframes callPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}
+  50%{box-shadow:0 0 0 14px rgba(34,197,94,0)}
+}
+.call-status{font-size:13px;color:var(--text3);margin-top:12px;min-height:20px}
+
+/* ── Screen 2: BankID ── */
+.bankid-icon{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--purple));
+  display:flex;align-items:center;justify-content:center;margin-bottom:20px;
+  position:relative;
+}
+.bankid-spinner{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:3px solid transparent;border-top-color:var(--teal);
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bankid-check{
+  opacity:0;transform:scale(0);transition:all .4s cubic-bezier(.34,1.56,.64,1);
+}
+.bankid-check.show{opacity:1;transform:scale(1)}
+.bankid-status{font-size:15px;color:var(--teal);font-weight:600;margin-top:12px;min-height:22px}
+
+/* ── Screen 3: Welcome ── */
+.welcome-avatar{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--green));
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:700;color:#fff;margin-bottom:16px;
+  box-shadow:0 0 0 4px rgba(34,197,94,.25);
+}
+.welcome-name{font-size:24px;font-weight:700;margin-bottom:4px}
+.welcome-role{font-size:14px;color:var(--text3);margin-bottom:16px;text-align:center}
+.welcome-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(34,197,94,.15);color:var(--green);
+  padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;
+}
+.welcome-badge svg{width:14px;height:14px;fill:var(--green)}
+
+/* ── Dashboard Layout ── */
+.dashboard-wrapper{
+  display:none;flex-direction:column;width:100%;min-height:90vh;
+  background:var(--light);
+}
+.dashboard-wrapper.active{display:flex}
+
+/* Top voice bar */
+.voice-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--dark);color:#fff;padding:10px 20px;
+  font-size:13px;position:sticky;top:0;z-index:30;
+  border-radius:16px 16px 0 0;
+}
+.vb-left{display:flex;align-items:center;gap:8px}
+.vb-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:dotPulse 2s infinite}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.vb-center{display:flex;align-items:center;gap:10px}
+.voice-bars{display:flex;align-items:center;gap:2px;height:20px}
+.voice-bars span{
+  display:block;width:3px;border-radius:2px;background:var(--teal);
+  animation:vbar 1.2s ease-in-out infinite;
+}
+.voice-bars span:nth-child(1){height:6px;animation-delay:0s}
+.voice-bars span:nth-child(2){height:10px;animation-delay:.15s}
+.voice-bars span:nth-child(3){height:6px;animation-delay:.3s}
+@keyframes vbar{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.8)}}
+.vb-transcript{
+  font-size:13px;color:var(--teal-light);max-width:400px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  opacity:0;transition:opacity .3s;
+}
+.vb-transcript.show{opacity:1}
+.vb-right{color:var(--text3);font-size:12px;display:flex;align-items:center;gap:12px}
+.vb-timer{font-variant-numeric:tabular-nums}
+/* Voice response */
+.voice-response{
+  background:var(--dark2);color:var(--light2);font-size:13px;
+  padding:8px 20px;border-bottom:1px solid var(--dark3);
+  opacity:0;max-height:0;overflow:hidden;transition:all .4s ease;
+}
+.voice-response.show{opacity:1;max-height:60px;padding:10px 20px}
+
+/* Dashboard content */
+.dash-content{
+  flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;
+  background:var(--light);
+}
+.dash-row{
+  display:grid;gap:16px;
+  opacity:0;transform:translateY(20px);
+  transition:all .6s cubic-bezier(.4,0,.2,1);
+}
+.dash-row.show{opacity:1;transform:translateY(0)}
+.dash-row.row1{grid-template-columns:1fr 1.3fr 1.5fr}
+.dash-row.row2{grid-template-columns:1fr 1.5fr 1fr}
+
+/* Cards */
+.card{
+  background:#fff;border-radius:var(--radius);padding:18px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid var(--light2);
+}
+.card-title{
+  font-size:12px;font-weight:600;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;
+}
+
+/* KPI cards */
+.kpi-group{display:flex;flex-direction:column;gap:10px}
+.kpi{
+  background:var(--light);border-radius:var(--radius-sm);padding:14px 16px;
+  border-left:3px solid var(--teal);
+}
+.kpi-label{font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.kpi-row{display:flex;align-items:baseline;gap:8px}
+.kpi-value{font-size:26px;font-weight:800;color:var(--text)}
+.kpi-trend{
+  font-size:12px;font-weight:700;color:var(--green);
+  display:flex;align-items:center;gap:2px;
+}
+.kpi-trend.down{color:var(--red)}
+.kpi-extra{margin-top:4px}
+
+/* Funnel */
+.funnel-bars{display:flex;flex-direction:column;gap:10px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-label{font-size:12px;color:var(--text2);width:85px;text-align:right;font-weight:500}
+.funnel-bar-wrap{flex:1;height:28px;background:var(--light);border-radius:14px;overflow:hidden;position:relative}
+.funnel-bar{
+  height:100%;border-radius:14px;
+  display:flex;align-items:center;padding-left:12px;
+  font-size:12px;font-weight:700;color:#fff;
+  width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1);
+}
+.funnel-conv{font-size:11px;color:var(--text3);width:42px;text-align:center}
+
+/* Top deals table */
+.deals-table{width:100%;font-size:13px}
+.deals-table th{
+  text-align:left;font-size:11px;color:var(--text3);font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;padding:0 6px 8px;
+  border-bottom:1px solid var(--light2);
+}
+.deals-table td{padding:8px 6px;border-bottom:1px solid var(--light);vertical-align:middle}
+.deals-table .deal-name{font-weight:600;color:var(--text)}
+.deals-table .deal-type{color:var(--text3);font-size:12px}
+.deals-table .deal-amount{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;text-align:right}
+.deal-stage-bar{height:6px;border-radius:3px;background:var(--light2);width:80px;overflow:hidden;display:inline-block;vertical-align:middle}
+.deal-stage-fill{height:100%;border-radius:3px;width:0;transition:width 1s ease}
+.stage-badge{
+  display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;
+  border-radius:10px;margin-left:6px;
+}
+.stage-ny{background:#ede9fe;color:#6D28D9}
+.stage-offert{background:var(--teal-bg);color:var(--teal-dark)}
+.stage-forhandling{background:rgba(123,97,255,.1);color:var(--purple)}
+.stage-vunnen{background:var(--green-light);color:#16a34a}
+
+/* Comparison bars */
+.comp-group{display:flex;flex-direction:column;gap:14px}
+.comp-item{display:flex;flex-direction:column;gap:4px}
+.comp-header{display:flex;justify-content:space-between;align-items:center}
+.comp-label{font-size:12px;font-weight:600;color:var(--text2)}
+.comp-change{
+  font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;
+}
+.comp-change.up{background:var(--green-light);color:#16a34a}
+.comp-change.down{background:#fecaca;color:var(--red)}
+.comp-bars{display:flex;gap:4px;align-items:flex-end;height:32px}
+.comp-bar{
+  border-radius:4px 4px 0 0;min-width:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  position:relative;height:0;transition:height 1s cubic-bezier(.4,0,.2,1);
+}
+.comp-bar-label{
+  position:absolute;top:-16px;font-size:10px;font-weight:700;
+  white-space:nowrap;color:var(--text2);
+}
+.comp-bar.prev{background:var(--light3);flex:1}
+.comp-bar.curr{background:var(--teal);flex:1}
+.comp-legend{display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--text3)}
+.comp-legend span{display:flex;align-items:center;gap:4px}
+.comp-legend .dot{width:8px;height:8px;border-radius:2px}
+.comp-legend .dot.prev{background:var(--light3)}
+.comp-legend .dot.curr{background:var(--teal)}
+
+/* Trend chart */
+.trend-chart{position:relative}
+.trend-callout{
+  position:absolute;top:8px;right:8px;
+  background:var(--teal-bg);color:var(--teal-dark);
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;
+  opacity:0;transition:opacity .5s;
+}
+.trend-callout.show{opacity:1}
+
+/* AI Insight */
+.insight-card{display:flex;flex-direction:column;gap:10px}
+.insight-main{
+  background:linear-gradient(135deg,rgba(123,97,255,.06),rgba(124,58,237,.06));
+  border-radius:var(--radius-sm);padding:14px;border-left:3px solid var(--purple);
+  font-size:13px;line-height:1.5;color:var(--text2);
+}
+.insight-compare{
+  display:flex;align-items:center;gap:12px;
+  background:var(--light);border-radius:var(--radius-sm);padding:12px 14px;
+}
+.insight-val{font-size:22px;font-weight:800;color:var(--text)}
+.insight-arrow{color:var(--green);font-size:20px;animation:insightArrow 1.5s ease-in-out infinite}
+@keyframes insightArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+.insight-label{font-size:11px;color:var(--text3)}
+.insight-suggestion{
+  font-size:12px;color:var(--text3);line-height:1.5;
+  padding:10px 14px;background:var(--light);border-radius:var(--radius-sm);
+}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .dash-row.row1,.dash-row.row2{grid-template-columns:1fr}
+  .phone-frame.expanding{width:98vw}
+  .voice-bar{border-radius:0;font-size:12px;padding:8px 12px}
+}
+@media(max-width:500px){
+  .phone-frame{width:95vw;height:85vh}
+}
+.gm-global-header{position:fixed;top:0;left:0;right:0;height:36px;background:#0F172A;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:9999;font-family:system-ui,-apple-system,sans-serif}
+.gm-global-header .gm-logo-dots{display:flex;gap:4px;margin-right:8px}
+.gm-global-header .gm-logo-dots span{width:8px;height:8px;border-radius:50%;background:#06B6D4}
+.gm-global-header .gm-logo-dots span:nth-child(1){background:#7C3AED}
+.gm-global-header .gm-logo-dots span:nth-child(2){background:#6366F1}
+.gm-global-header .gm-logo-dots span:nth-child(3){background:#3B82F6}
+.gm-global-header .gm-logo-dots span:nth-child(4){background:#06B6D4}
+.gm-global-header .gm-left{display:flex;align-items:center}
+.gm-global-header .gm-brand-text{color:#fff;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+.gm-global-header .gm-right{color:#7C3AED;font-size:11px;font-weight:700}
+
+/* ── Step Controls ── */
+.step-controls{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;z-index:9998;background:rgba(30,41,59,0.95);padding:10px 24px;border-radius:30px;box-shadow:0 4px 20px rgba(0,0,0,0.3);backdrop-filter:blur(8px);flex-wrap:wrap;justify-content:center}
+.step-controls button{background:#7C3AED;color:#fff;border:none;padding:8px 24px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s}
+.step-controls button:hover{background:#6D28D9}
+#stepCounter{color:rgba(255,255,255,0.7);font-size:13px;font-weight:300;min-width:120px}
+.step-note{width:100%;text-align:center;color:rgba(255,255,255,0.5);font-size:12px;font-style:italic;line-height:1.3;margin-top:2px}
+
+/* ── Voice FAB (active indicator) ── */
+.voice-fab{position:fixed;bottom:20px;left:20px;z-index:9998}
+.voice-fab-icon{width:48px;height:48px;border-radius:50%;background:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(124,58,237,0.4);animation:pulse-voice 2s infinite}
+.voice-fab-label{position:absolute;bottom:56px;left:0;background:#1e293b;color:#7C3AED;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;letter-spacing:0.05em;text-transform:uppercase}
+@keyframes pulse-voice{0%,100%{box-shadow:0 4px 16px rgba(124,58,237,0.4)}50%{box-shadow:0 4px 24px rgba(124,58,237,0.7)}}
+</style>
+</head>
+<body>
+<div class="gm-global-header"><div class="gm-left"><div class="gm-logo-dots"><span></span><span></span><span></span><span></span></div><span class="gm-brand-text">Groovemill</span></div><div class="gm-right">AI-First CRM</div></div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PHONE FRAME (holds auth screens + dashboard) -->
+<!-- ════════════════════════════════════════════ -->
+<div class="phone-frame" id="phoneFrame">
+  <div class="phone-notch"></div>
+  <div class="phone-content">
+
+    <!-- ── Auth Screen 1: Dial ── -->
+    <div class="auth-screen active" id="screen1">
+      <div class="auth-brand"><span class="gm-dots-auth"><span></span><span></span><span></span><span></span></span><br>Groovemill</div>
+      <div class="auth-title">CRM Röstassistent</div>
+      <div class="auth-subtitle">Ring för att ansluta till ditt CRM</div>
+      <div class="dial-number" id="dialNumber">+46 8 123 45 67</div>
+      <div class="call-btn" id="callBtn">
+        <svg viewBox="0 0 24 24"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.36 11.36 0 003.58.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.58 1 1 0 01-.25 1.01l-2.2 2.2z"/></svg>
+      </div>
+      <div class="call-status" id="callStatus">Tryck för att ringa</div>
+    </div>
+
+    <!-- ── Auth Screen 2: BankID ── -->
+    <div class="auth-screen" id="screen2">
+      <div class="bankid-icon" id="bankidIcon">
+        <div class="bankid-spinner" id="bankidSpinner"></div>
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="#fff" id="bankidLock">
+          <path d="M12 1a5 5 0 00-5 5v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm0 2a3 3 0 013 3v2H9V6a3 3 0 013-3zm0 10a2 2 0 110 4 2 2 0 010-4z"/>
+        </svg>
+        <svg class="bankid-check" id="bankidCheck" width="40" height="40" viewBox="0 0 40 40" style="position:absolute">
+          <circle cx="20" cy="20" r="20" fill="var(--green)"/>
+          <path d="M12 20l5 5 11-11" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="auth-title" id="bankidTitle">Identifiera med BankID</div>
+      <div class="auth-subtitle">Öppna BankID-appen på din enhet</div>
+      <div class="bankid-status" id="bankidStatus">Väntar på BankID...</div>
+    </div>
+
+    <!-- ── Auth Screen 3: Welcome ── -->
+    <div class="auth-screen" id="screen3">
+      <div class="welcome-avatar">AL</div>
+      <div class="welcome-name">Anna Lindberg</div>
+      <div class="welcome-role">Försäljningschef — Groovemill</div>
+      <div class="welcome-badge">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+        Full CRM-åtkomst beviljad
+      </div>
+    </div>
+
+    <!-- ── Dashboard ── -->
+    <div class="dashboard-wrapper" id="dashboard">
+      <!-- Voice bar -->
+      <div class="voice-bar">
+        <div class="vb-left">
+          <span class="vb-dot"></span>
+          <span>Anna Lindberg — Verifierad</span>
+        </div>
+        <div class="vb-center">
+          <div class="voice-bars" id="voiceBars">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="vb-transcript" id="transcript"></div>
+        </div>
+        <div class="vb-right">
+          <span class="vb-timer" id="timer">0:08</span>
+          <!-- replay removed: using step-controls -->
+        </div>
+      </div>
+
+      <!-- Voice response -->
+      <div class="voice-response" id="voiceResp1"></div>
+      <div class="voice-response" id="voiceResp2"></div>
+
+      <!-- Dashboard content -->
+      <div class="dash-content">
+
+        <!-- ═══ ROW 1: Pipeline overview ═══ -->
+        <div class="dash-row row1" id="row1">
+
+          <!-- KPI cards -->
+          <div class="card">
+            <div class="card-title">Pipeline-översikt</div>
+            <div class="kpi-group">
+              <div class="kpi">
+                <div class="kpi-label">Aktiva affärer</div>
+                <div class="kpi-row">
+                  <span class="kpi-value" id="kpiDeals">0</span>
+                  <span class="kpi-trend">&#9650; 3</span>
+                </div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Pipeline-värde</div>
+                <div class="kpi-row">
+                  <span class="kpi-value" id="kpiValue">0</span>
+                  <span class="kpi-trend">Mkr</span>
+                </div>
+                <div class="kpi-extra">
+                  <svg id="sparkline1" width="100%" height="30" viewBox="0 0 160 30" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--teal)" stop-opacity=".3"/>
+                        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0"/>
+                      </linearGradient>
+                    </defs>
+                    <path d="M0,25 C20,22 40,20 60,18 C80,16 100,8 120,12 C140,16 155,6 160,4" fill="none" stroke="var(--teal)" stroke-width="2" class="spark-line"/>
+                    <path d="M0,25 C20,22 40,20 60,18 C80,16 100,8 120,12 C140,16 155,6 160,4 L160,30 L0,30Z" fill="url(#sparkGrad)" class="spark-area"/>
+                    <circle cx="160" cy="4" r="3" fill="var(--teal)" class="spark-dot"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Prognostiserat</div>
+                <div class="kpi-row">
+                  <span class="kpi-value" id="kpiForecast">0</span>
+                  <span class="kpi-trend">Mkr</span>
+                </div>
+                <div class="kpi-extra">
+                  <div style="height:6px;border-radius:3px;background:var(--light2);overflow:hidden;margin-top:4px">
+                    <div id="confBar" style="height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--green));transition:width 1.5s ease"></div>
+                  </div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px">64% konfidens</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Funnel -->
+          <div class="card">
+            <div class="card-title">Försäljningstratt</div>
+            <div class="funnel-bars">
+              <div class="funnel-row">
+                <span class="funnel-label">Ny</span>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" id="fb1" style="background:linear-gradient(90deg,#a78bfa,var(--teal))">5</div>
+                </div>
+                <span class="funnel-conv"></span>
+              </div>
+              <div class="funnel-row">
+                <span class="funnel-label">Offert</span>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" id="fb2" style="background:linear-gradient(90deg,var(--teal),var(--teal-dark))">4</div>
+                </div>
+                <span class="funnel-conv">80%</span>
+              </div>
+              <div class="funnel-row">
+                <span class="funnel-label">Förhandling</span>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" id="fb3" style="background:linear-gradient(90deg,var(--teal-dark),var(--purple))">3</div>
+                </div>
+                <span class="funnel-conv">75%</span>
+              </div>
+              <div class="funnel-row">
+                <span class="funnel-label">Vunnen</span>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" id="fb4" style="background:linear-gradient(90deg,var(--purple),var(--green))">2</div>
+                </div>
+                <span class="funnel-conv">67%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top 5 Deals -->
+          <div class="card">
+            <div class="card-title">Topp 5 affärer</div>
+            <table class="deals-table">
+              <thead>
+                <tr><th>Kund</th><th>Tjänst</th><th style="text-align:right">Värde</th><th>Status</th></tr>
+              </thead>
+              <tbody id="dealsBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══ ROW 2: Comparison ═══ -->
+        <div class="dash-row row2" id="row2">
+
+          <!-- Month comparison -->
+          <div class="card">
+            <div class="card-title">Feb vs Mar — Jämförelse</div>
+            <div class="comp-group" id="compGroup">
+            </div>
+            <div class="comp-legend" style="margin-top:12px">
+              <span><span class="dot prev"></span> Feb</span>
+              <span><span class="dot curr"></span> Mar</span>
+            </div>
+          </div>
+
+          <!-- Trend chart -->
+          <div class="card trend-chart">
+            <div class="card-title">Pipeline-trend (6 månader)</div>
+            <div class="trend-callout" id="trendCallout">Bästa månaden sedan oktober</div>
+            <svg id="trendSVG" width="100%" height="220" viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <linearGradient id="tealGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--teal)" stop-opacity=".25"/>
+                  <stop offset="100%" stop-color="var(--teal)" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--purple)" stop-opacity=".2"/>
+                  <stop offset="100%" stop-color="var(--purple)" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- Grid -->
+              <line x1="50" y1="30" x2="50" y2="190" stroke="var(--light2)" stroke-width="1"/>
+              <line x1="50" y1="190" x2="480" y2="190" stroke="var(--light2)" stroke-width="1"/>
+              <line x1="50" y1="110" x2="480" y2="110" stroke="var(--light2)" stroke-width="1" stroke-dasharray="4,4" opacity=".5"/>
+              <line x1="50" y1="70" x2="480" y2="70" stroke="var(--light2)" stroke-width="1" stroke-dasharray="4,4" opacity=".5"/>
+              <line x1="50" y1="150" x2="480" y2="150" stroke="var(--light2)" stroke-width="1" stroke-dasharray="4,4" opacity=".5"/>
+              <!-- Y axis labels -->
+              <text x="44" y="74" text-anchor="end" font-size="10" fill="var(--text3)">4M</text>
+              <text x="44" y="114" text-anchor="end" font-size="10" fill="var(--text3)">3M</text>
+              <text x="44" y="154" text-anchor="end" font-size="10" fill="var(--text3)">2M</text>
+              <text x="44" y="194" text-anchor="end" font-size="10" fill="var(--text3)">1M</text>
+              <!-- X axis labels -->
+              <text x="80" y="210" text-anchor="middle" font-size="11" fill="var(--text3)">Okt</text>
+              <text x="160" y="210" text-anchor="middle" font-size="11" fill="var(--text3)">Nov</text>
+              <text x="240" y="210" text-anchor="middle" font-size="11" fill="var(--text3)">Dec</text>
+              <text x="320" y="210" text-anchor="middle" font-size="11" fill="var(--text3)">Jan</text>
+              <text x="400" y="210" text-anchor="middle" font-size="11" fill="var(--text3)">Feb</text>
+              <text x="470" y="210" text-anchor="middle" font-size="11" fill="var(--text3)" font-weight="700">Mar</text>
+              <!-- Pipeline line (teal) -->
+              <path id="trendArea1" d="M80,80 C120,95 160,120 240,130 C300,136 360,125 400,115 C430,108 455,88 470,75 L470,190 L80,190Z" fill="url(#tealGrad)" opacity="0">
+                <animate attributeName="opacity" from="0" to="1" dur="1s" begin="0s" fill="freeze"/>
+              </path>
+              <path id="trendLine1" d="M80,80 C120,95 160,120 240,130 C300,136 360,125 400,115 C430,108 455,88 470,75"
+                fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linecap="round"
+                stroke-dasharray="600" stroke-dashoffset="600">
+              </path>
+              <!-- Vunna line (purple) -->
+              <path id="trendArea2" d="M80,140 C120,145 160,155 240,150 C300,146 360,140 400,130 C430,124 455,112 470,105 L470,190 L80,190Z" fill="url(#purpleGrad)" opacity="0">
+                <animate attributeName="opacity" from="0" to="1" dur="1s" begin="0s" fill="freeze"/>
+              </path>
+              <path id="trendLine2" d="M80,140 C120,145 160,155 240,150 C300,146 360,140 400,130 C430,124 455,112 470,105"
+                fill="none" stroke="var(--purple)" stroke-width="2.5" stroke-linecap="round"
+                stroke-dasharray="600" stroke-dashoffset="600">
+              </path>
+              <!-- Data dots March -->
+              <circle id="dot1" cx="470" cy="75" r="0" fill="var(--teal)" stroke="#fff" stroke-width="2"/>
+              <circle id="dot2" cx="470" cy="105" r="0" fill="var(--purple)" stroke="#fff" stroke-width="2"/>
+              <!-- Legend -->
+              <rect x="60" y="2" width="10" height="10" rx="2" fill="var(--teal)"/>
+              <text x="75" y="11" font-size="11" fill="var(--text2)">Pipeline-värde</text>
+              <rect x="190" y="2" width="10" height="10" rx="2" fill="var(--purple)"/>
+              <text x="205" y="11" font-size="11" fill="var(--text2)">Vunna affärer kumulativt</text>
+            </svg>
+          </div>
+
+          <!-- AI Insight -->
+          <div class="card">
+            <div class="card-title" style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:16px">&#128161;</span> AI-insikt
+            </div>
+            <div class="insight-card" id="insightCard">
+              <div class="insight-main">
+                Konverteringsgraden har ökat 3 månader i rad. Största förbättringen: <strong>Offert &#8594; Förhandling (+15pp)</strong>
+              </div>
+              <div class="insight-compare">
+                <div style="text-align:center">
+                  <div class="insight-val">60%</div>
+                  <div class="insight-label">Före</div>
+                </div>
+                <div class="insight-arrow" style="font-size:28px">&#8594;</div>
+                <div style="text-align:center">
+                  <div class="insight-val" style="color:var(--green)">75%</div>
+                  <div class="insight-label">Nu</div>
+                </div>
+              </div>
+              <div class="insight-suggestion">
+                &#128203; <strong>Rekommendation:</strong> Fortsätt med samma strategi — fler platsbesök tidigt i processen ger högre konvertering från offert till förhandling.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /dash-content -->
+    </div><!-- /dashboard -->
+
+  </div><!-- /phone-content -->
+</div><!-- /phone-frame -->
+
+<!-- ── Step Controls ── -->
+<div class="step-controls">
+  <button id="btnNext" onclick="nextStep()">Nästa →</button>
+  <span id="stepCounter">Klicka för att börja</span>
+  <div id="stepNote" class="step-note"></div>
+</div>
+
+<!-- ── Voice FAB (active indicator) ── -->
+<div class="voice-fab active">
+  <div class="voice-fab-icon">📞</div>
+  <div class="voice-fab-label">Röstkanal aktiv</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CLICK-TO-ADVANCE ENGINE
+// ══════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+const frame = $('phoneFrame');
+let timerSec = 8;
+let timerInterval = null;
+const timeouts = [];
+const TOTAL_STEPS = 11;
+let currentStep = 0;
+
+function schedule(fn, ms) {
+  const t = setTimeout(fn, ms);
+  timeouts.push(t);
+  return t;
+}
+
+// ── Deals data ──
+const deals = [
+  { name: 'Nordea', type: 'Konsulting', amount: '890k', pct: 100, stage: 'Offert', cls: 'stage-offert' },
+  { name: 'Castellum', type: 'Plattform', amount: '670k', pct: 80, stage: 'Förhandling', cls: 'stage-forhandling' },
+  { name: 'Vasakronan', type: 'Integration', amount: '450k', pct: 40, stage: 'Ny', cls: 'stage-ny' },
+  { name: 'BRF Klippan', type: 'Support', amount: '120k', pct: 30, stage: 'Ny', cls: 'stage-ny' },
+  { name: 'Riksbyggen', type: 'Licens', amount: '85k', pct: 80, stage: 'Offert', cls: 'stage-offert' },
+];
+
+function buildDealsTable() {
+  const tbody = $('dealsBody');
+  tbody.innerHTML = '';
+  deals.forEach((d, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="deal-name">${d.name}</td>
+      <td class="deal-type">${d.type}</td>
+      <td class="deal-amount">${d.amount}</td>
+      <td>
+        <span class="deal-stage-bar"><span class="deal-stage-fill" id="dsf${i}"></span></span>
+        <span class="stage-badge ${d.cls}">${d.stage}</span>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Comparison data ──
+const compData = [
+  { label: 'Nya affärer', prev: 8, curr: 12, max: 14, change: '+50%', up: true },
+  { label: 'Vunna', prev: 5, curr: 7, max: 9, change: '+40%', up: true },
+  { label: 'Värde (Mkr)', prev: 2.8, curr: 3.3, max: 4, change: '+18%', up: true },
+  { label: 'Win rate (%)', prev: 71, curr: 78, max: 100, change: '+10%', up: true },
+];
+
+function buildComparison() {
+  const group = $('compGroup');
+  group.innerHTML = '';
+  compData.forEach((d, i) => {
+    const div = document.createElement('div');
+    div.className = 'comp-item';
+    div.innerHTML = `
+      <div class="comp-header">
+        <span class="comp-label">${d.label}</span>
+        <span class="comp-change ${d.up ? 'up' : 'down'}">${d.change}</span>
+      </div>
+      <div class="comp-bars">
+        <div class="comp-bar prev" id="cprev${i}" style="height:0">
+          <span class="comp-bar-label">${typeof d.prev === 'number' && d.prev % 1 !== 0 ? d.prev.toFixed(1) : d.prev}</span>
+        </div>
+        <div class="comp-bar curr" id="ccurr${i}" style="height:0">
+          <span class="comp-bar-label">${typeof d.curr === 'number' && d.curr % 1 !== 0 ? d.curr.toFixed(1) : d.curr}</span>
+        </div>
+      </div>`;
+    group.appendChild(div);
+  });
+}
+
+// ── Counter animation ──
+function animateCounter(el, target, suffix, duration) {
+  const isFloat = target % 1 !== 0;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const v = eased * target;
+    el.textContent = isFloat ? v.toFixed(1) : Math.round(v);
+    if (suffix) el.textContent += suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ── Transcript typing ──
+function typeTranscript(text, speed) {
+  const el = $('transcript');
+  el.textContent = '';
+  el.classList.add('show');
+  let i = 0;
+  function tick() {
+    if (i <= text.length) {
+      el.textContent = text.substring(0, i);
+      i++;
+      schedule(tick, speed || 35);
+    }
+  }
+  tick();
+}
+
+// ── Timer ──
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSec++;
+    const m = Math.floor(timerSec / 60);
+    const s = timerSec % 60;
+    $('timer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
+}
+
+// ══════════════════════════════════════════════
+// SCREEN HELPERS
+// ══════════════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+const stepNotes = [
+  "Anv\u00e4ndaren ringer CRM-assistentens telefonnummer",
+  "BankID-verifiering startar automatiskt",
+  "Identifiering klar \u2014 snabb och s\u00e4ker",
+  "V\u00e4lkomstsk\u00e4rm med namn och roll",
+  "\u00d6verg\u00e5ng till full dashboard \u2014 r\u00f6stkanal aktiv",
+  "Anv\u00e4ndaren fr\u00e5gar om pipeline via r\u00f6st",
+  "KPI-kort, f\u00f6rs\u00e4ljningstratt och topplista \u2014 allt visuellt",
+  "AI:n l\u00e4ser upp sammanfattningen",
+  "F\u00f6ljdfr\u00e5ga: j\u00e4mf\u00f6r med f\u00f6rra m\u00e5naden",
+  "J\u00e4mf\u00f6relsediagram, trendlinjer och AI-insikt",
+  "Sammanfattning uppl\u00e4st \u2014 helt handsfree"
+];
+
+function updateCounter() {
+  $('stepCounter').textContent = 'Steg ' + currentStep + ' / ' + TOTAL_STEPS;
+  $('btnNext').textContent = currentStep >= TOTAL_STEPS ? 'Börja om ↺' : 'Nästa →';
+  document.getElementById('stepNote').textContent = stepNotes[currentStep - 1] || '';
+}
+
+// ══════════════════════════════════════════════
+// RESET
+// ══════════════════════════════════════════════
+
+function resetAll() {
+  timeouts.forEach(t => clearTimeout(t));
+  timeouts.length = 0;
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  timerSec = 8;
+  currentStep = 0;
+
+  // Reset auth
+  document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+  $('screen1').classList.add('active');
+  $('callStatus').textContent = 'Tryck för att ringa';
+  $('callStatus').style.color = '';
+  $('callBtn').style.animation = 'callPulse 1s ease-in-out infinite';
+  $('bankidSpinner').style.display = '';
+  $('bankidLock').style.display = '';
+  $('bankidCheck').classList.remove('show');
+  $('bankidTitle').textContent = 'Identifiera med BankID';
+  $('bankidStatus').textContent = 'Väntar på BankID...';
+
+  // Reset frame
+  frame.classList.remove('expanding');
+  document.body.classList.remove('dashboard-mode');
+  $('dashboard').classList.remove('active');
+
+  // Reset dashboard
+  $('row1').classList.remove('show');
+  $('row2').classList.remove('show');
+  $('transcript').classList.remove('show');
+  $('transcript').textContent = '';
+  $('voiceResp1').classList.remove('show');
+  $('voiceResp1').textContent = '';
+  $('voiceResp2').classList.remove('show');
+  $('voiceResp2').textContent = '';
+  $('trendCallout').classList.remove('show');
+  $('timer').textContent = '0:08';
+
+  // Reset trend lines
+  $('trendLine1').style.transition = 'none';
+  $('trendLine1').style.strokeDashoffset = '600';
+  $('trendLine2').style.transition = 'none';
+  $('trendLine2').style.strokeDashoffset = '600';
+  $('trendArea1').style.transition = 'none';
+  $('trendArea1').style.opacity = '0';
+  $('trendArea2').style.transition = 'none';
+  $('trendArea2').style.opacity = '0';
+  $('dot1').setAttribute('r', '0');
+  $('dot2').setAttribute('r', '0');
+
+  // Reset funnel bars
+  ['fb1','fb2','fb3','fb4'].forEach(id => { const e = $(id); if (e) e.style.width = '0'; });
+  // Reset confidence bar
+  const cb = $('confBar'); if (cb) cb.style.width = '0';
+
+  $('stepCounter').textContent = 'Klicka för att börja';
+  $('btnNext').textContent = 'Nästa →';
+  document.getElementById('stepNote').textContent = '';
+}
+
+// ══════════════════════════════════════════════
+// STEP DEFINITIONS (11 steps)
+// ══════════════════════════════════════════════
+
+function runStep(step) {
+  switch (step) {
+
+    // 1 — Dial screen: call initiates
+    case 1:
+      $('callBtn').style.animation = 'none';
+      $('callStatus').textContent = 'Ringer...';
+      schedule(() => { $('callStatus').textContent = 'Ansluter...'; }, 400);
+      schedule(() => {
+        $('callStatus').textContent = 'Ansluten \u2713';
+        $('callStatus').style.color = 'var(--green)';
+      }, 800);
+      break;
+
+    // 2 — BankID verification starts
+    case 2:
+      $('callStatus').style.color = '';
+      showScreen('screen2');
+      schedule(() => { $('bankidStatus').textContent = 'Identifierar...'; }, 300);
+      break;
+
+    // 3 — BankID checkmark, verified
+    case 3:
+      $('bankidSpinner').style.display = 'none';
+      $('bankidLock').style.display = 'none';
+      $('bankidCheck').classList.add('show');
+      $('bankidTitle').textContent = 'Identifiering klar!';
+      $('bankidStatus').textContent = '';
+      $('bankidStatus').innerHTML = '<span style="color:var(--green)">&#10003; Verifierad</span>';
+      break;
+
+    // 4 — Welcome screen with identity
+    case 4:
+      showScreen('screen3');
+      break;
+
+    // 5 — Phone expands to dashboard
+    case 5:
+      document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+      document.body.classList.add('dashboard-mode');
+      frame.classList.add('expanding');
+      $('dashboard').classList.add('active');
+      startTimer();
+      break;
+
+    // 6 — Voice query transcript: "Hur ser min pipeline ut?"
+    case 6:
+      typeTranscript('\uD83C\uDFA4 "Hur ser min pipeline ut denna m\u00e5nad?"', 30);
+      break;
+
+    // 7 — Row 1 KPI cards + funnel + deals table appear
+    case 7:
+      buildDealsTable();
+      $('row1').classList.add('show');
+
+      // Animate KPIs
+      animateCounter($('kpiDeals'), 12, '', 800);
+      animateCounter($('kpiValue'), 3.3, '', 1000);
+      animateCounter($('kpiForecast'), 2.1, '', 1000);
+      schedule(() => { $('confBar').style.width = '64%'; }, 200);
+
+      // Animate funnel bars
+      schedule(() => { $('fb1').style.width = '100%'; }, 100);
+      schedule(() => { $('fb2').style.width = '80%'; }, 250);
+      schedule(() => { $('fb3').style.width = '60%'; }, 400);
+      schedule(() => { $('fb4').style.width = '40%'; }, 550);
+
+      // Animate deal stage bars
+      deals.forEach((d, i) => {
+        schedule(() => {
+          const el = $('dsf' + i);
+          if (el) {
+            el.style.width = d.pct + '%';
+            el.style.background = d.cls.includes('ny') ? '#a78bfa' :
+              d.cls.includes('offert') ? 'var(--teal)' :
+              d.cls.includes('forhandling') ? 'var(--purple)' : 'var(--green)';
+          }
+        }, 300 + i * 120);
+      });
+      break;
+
+    // 8 — Voice response text (query 1)
+    case 8:
+      $('voiceResp1').textContent = '\uD83D\uDD0A "Du har 12 aktiva aff\u00e4rer v\u00e4rda 3,3 miljoner. Tre aff\u00e4rer \u00e4r i f\u00f6rhandling."';
+      $('voiceResp1').classList.add('show');
+      break;
+
+    // 9 — Second query: "Jämför med förra månaden"
+    case 9:
+      $('voiceResp1').classList.remove('show');
+      typeTranscript('\uD83C\uDFA4 "J\u00e4mf\u00f6r med f\u00f6rra m\u00e5naden"', 30);
+      break;
+
+    // 10 — Row 2 comparison + trends + AI insight appear
+    case 10:
+      buildComparison();
+      $('row2').classList.add('show');
+
+      // Animate comparison bars
+      compData.forEach((d, i) => {
+        const maxH = 28;
+        schedule(() => {
+          const prevEl = $('cprev' + i);
+          const currEl = $('ccurr' + i);
+          if (prevEl) prevEl.style.height = Math.round((d.prev / d.max) * maxH) + 'px';
+          if (currEl) currEl.style.height = Math.round((d.curr / d.max) * maxH) + 'px';
+        }, 200 + i * 150);
+      });
+
+      // Animate trend lines
+      schedule(() => {
+        $('trendLine1').style.transition = 'stroke-dashoffset 1.5s ease';
+        $('trendLine1').style.strokeDashoffset = '0';
+        $('trendArea1').style.transition = 'opacity 1s ease .5s';
+        $('trendArea1').style.opacity = '1';
+      }, 300);
+
+      schedule(() => {
+        $('trendLine2').style.transition = 'stroke-dashoffset 1.5s ease';
+        $('trendLine2').style.strokeDashoffset = '0';
+        $('trendArea2').style.transition = 'opacity 1s ease .5s';
+        $('trendArea2').style.opacity = '1';
+      }, 600);
+
+      schedule(() => {
+        $('dot1').setAttribute('r', '5');
+        $('dot1').style.transition = 'r .3s';
+        $('dot2').setAttribute('r', '5');
+        $('dot2').style.transition = 'r .3s';
+        $('trendCallout').classList.add('show');
+      }, 2200);
+      break;
+
+    // 11 — Voice response text (query 2)
+    case 11:
+      $('voiceResp2').textContent = '\uD83D\uDD0A "J\u00e4mf\u00f6rt med f\u00f6rra m\u00e5naden har du 50% fler nya aff\u00e4rer och 40% fler vunna. B\u00e4sta m\u00e5naden sedan oktober."';
+      $('voiceResp2').classList.add('show');
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      break;
+  }
+}
+
+// ══════════════════════════════════════════════
+// CLICK / KEYBOARD HANDLERS
+// ══════════════════════════════════════════════
+
+function nextStep() {
+  if (currentStep >= TOTAL_STEPS) {
+    // Reset and start over
+    resetAll();
+    return;
+  }
+  currentStep++;
+  updateCounter();
+  runStep(currentStep);
+}
+
+// Keyboard: ArrowRight/Space = advance, 'r' = reset
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault();
+    nextStep();
+  } else if (e.key === 'r' || e.key === 'R') {
+    resetAll();
+  }
+});
+
+// ── Init on load ──
+window.addEventListener('DOMContentLoaded', () => {
+  resetAll();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Groovemill — Chat-to-Action Context Panel</title>
+<style>
+  /* ── Reset & base ──────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:    #7C3AED;
+    --purple:  #7B61FF;
+    --dark-bg: #e2e8f0;
+    --card-bg: #1e293b;
+    --sidebar: #f1f5f9;
+    --chat-bg: #ffffff;
+    --text:    #1e293b;
+    --muted:   #64748b;
+    --success: #22c55e;
+    --danger:  #ef4444;
+    --warning: #f59e0b;
+    --font:    system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--dark-bg);
+    color: var(--text);
+    font-family: var(--font);
+    overflow-x: hidden;
+    padding-top: 36px;
+  }
+
+  /* ── App layout ─────────────────────────────────────── */
+  .app {
+    display: flex;
+    height: calc(100vh - 50px);
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ── LEFT SIDEBAR ───────────────────────────────────── */
+  .sidebar-left {
+    width: 250px;
+    min-width: 250px;
+    background: var(--sidebar);
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 16px;
+    overflow-y: auto;
+    transform: translateX(-260px);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+  }
+  .sidebar-left.visible {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  /* ── CENTER CHAT ────────────────────────────────────── */
+  .chat-center {
+    flex: 1;
+    min-width: 0;
+    max-width: 600px;
+    background: var(--chat-bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .chat-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .chat-header .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 14px;
+  }
+  .chat-header .title { font-weight: 600; font-size: 15px; }
+  .chat-header .subtitle { font-size: 12px; color: var(--muted); }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .msg {
+    max-width: 90%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .msg.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .msg.agent {
+    background: #f1f5f9;
+    color: var(--text);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    background: var(--teal);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+
+  /* ── Confirmation card ──────────────────────────────── */
+  .deal-card {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 8px;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+  .deal-card.success {
+    border-color: var(--success);
+    box-shadow: 0 0 0 3px rgba(34,197,94,0.15);
+  }
+  .deal-card .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+  .deal-card .row .label { color: var(--muted); }
+  .deal-card .row .value { font-weight: 600; }
+  .deal-card .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .deal-card .btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .deal-card .btn-primary {
+    background: var(--teal);
+    color: #fff;
+  }
+  .deal-card .btn-secondary {
+    background: #e2e8f0;
+    color: var(--text);
+  }
+  .deal-card .btn.clicked {
+    background: var(--success);
+    color: #fff;
+    transform: scale(0.95);
+  }
+  .deal-card .btn-secondary.clicked {
+    background: var(--warning);
+    color: #fff;
+    transform: scale(0.95);
+  }
+  .deal-card .row.modified {
+    background: rgba(245,158,11,0.12);
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin: 0 -6px;
+  }
+  .deal-card .row.modified .value {
+    color: var(--warning);
+  }
+  .deal-card .fields-updated {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(245,158,11,0.1);
+    color: var(--warning);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .deal-card .fields-updated::before {
+    content: "\270E";
+    font-size: 13px;
+  }
+
+  /* ── Funnel visualization ───────────────────────────── */
+  .funnel-viz {
+    margin-top: 12px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .funnel-viz.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .funnel-stages {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 12px;
+  }
+  .funnel-stage-item {
+    flex: 1;
+    text-align: center;
+  }
+  .funnel-bar {
+    height: 28px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: background 0.4s ease, color 0.4s ease;
+    position: relative;
+  }
+  .funnel-bar.active {
+    background: var(--teal);
+    color: #fff;
+  }
+  .funnel-bar::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 5px solid #e2e8f0;
+  }
+  .funnel-bar.active::after {
+    border-left-color: var(--teal);
+  }
+  .funnel-stage-item:last-child .funnel-bar::after {
+    display: none;
+  }
+
+  .next-step {
+    margin-top: 14px;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(123,97,255,0.08));
+    border-radius: 10px;
+    border-left: 3px solid var(--teal);
+  }
+  .next-step .ns-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .next-step .ns-text {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .next-step .ns-date {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .cal-icon {
+    width: 32px; height: 34px;
+    border-radius: 6px;
+    background: var(--teal);
+    color: #fff;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .cal-icon .cal-month {
+    font-size: 7px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+    margin-top: 1px;
+  }
+
+  /* ── RIGHT SIDEBAR ──────────────────────────────────── */
+  .sidebar-right {
+    width: 250px;
+    min-width: 250px;
+    background: var(--sidebar);
+    border-left: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 16px;
+    overflow-y: auto;
+    transform: translateX(260px);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+  }
+  .sidebar-right.visible {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  /* ── Sidebar cards ──────────────────────────────────── */
+  .side-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .side-card h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* company card */
+  .company-card .company-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .company-card .company-industry {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .company-card .company-detail {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 2px 0;
+  }
+  .company-card .company-detail span {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .relationship-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(124,58,237,0.1);
+    color: var(--teal);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .relationship-badge::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  /* donut chart area */
+  .donut-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .donut-svg { flex-shrink: 0; }
+  .donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .donut-legend .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text);
+  }
+  .leg-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* deal score */
+  .score-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .score-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 4px;
+  }
+  .score-sublabel {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .score-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    background: rgba(34,197,94,0.1);
+    color: var(--success);
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .score-change.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* factor bars */
+  .factor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .factor.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .factor .f-label {
+    font-size: 11px;
+    color: var(--muted);
+    width: 88px;
+    flex-shrink: 0;
+  }
+  .factor .f-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .factor .f-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--teal);
+    transition: width 0.6s ease;
+    width: 0;
+  }
+  .factor .f-pct {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+    width: 28px;
+    text-align: right;
+  }
+
+  /* similar deals */
+  .similar-deal {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .similar-deal.visible { opacity: 1; transform: translateY(0); }
+  .similar-deal:last-child { border-bottom: none; }
+  .similar-deal .sd-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .similar-deal .sd-detail {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .sd-won {
+    color: var(--success) !important;
+    font-weight: 600;
+  }
+  .avg-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(123,97,255,0.1);
+    color: var(--purple);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* relationship map */
+  .rel-map-container {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .rel-map-container.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── Typing indicator ───────────────────────────────── */
+  .typing {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+    background: #f1f5f9;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+    opacity: 0;
+    animation: fadeInUp 0.25s ease forwards;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .typing .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #94a3b8;
+    animation: typingBounce 1.2s infinite ease-in-out;
+  }
+  .typing .dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* ── Footer ─────────────────────────────────────────── */
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    height: 50px;
+    padding: 0 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    background: rgba(15,23,42,0.95);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    z-index: 100;
+  }
+  .footer .replay-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 8px;
+    background: rgba(124,58,237,0.15);
+    color: var(--teal);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .replay-btn:hover { background: rgba(124,58,237,0.25); }
+  .footer .brand {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  /* ── Chat input area ────────────────────────────────── */
+  .chat-input-area {
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chat-input-area input {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    font-size: 13px;
+    font-family: var(--font);
+    outline: none;
+    color: var(--text);
+    background: #fff;
+  }
+  .chat-input-area input:focus { border-color: var(--teal); }
+
+  /* ── Responsive ─────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .sidebar-left, .sidebar-right {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      z-index: 10;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.12);
+    }
+    .sidebar-left { left: 0; }
+    .sidebar-right { right: 0; }
+    .chat-center { max-width: 100%; }
+  }
+
+  /* ── Progress bar (top) ─────────────────────────────── */
+  .progress-bar {
+    position: fixed;
+    top: 36px; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--teal), var(--purple));
+    z-index: 200;
+    transition: width 0.5s ease;
+    width: 0;
+    border-radius: 0 2px 2px 0;
+  }
+.gm-global-header{position:fixed;top:0;left:0;right:0;height:36px;background:#0F172A;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:9999;font-family:system-ui,-apple-system,sans-serif}
+.gm-global-header .gm-logo-dots{display:flex;gap:4px;margin-right:8px}
+.gm-global-header .gm-logo-dots span{width:8px;height:8px;border-radius:50%}
+.gm-global-header .gm-logo-dots span:nth-child(1){background:#7C3AED}
+.gm-global-header .gm-logo-dots span:nth-child(2){background:#6366F1}
+.gm-global-header .gm-logo-dots span:nth-child(3){background:#3B82F6}
+.gm-global-header .gm-logo-dots span:nth-child(4){background:#06B6D4}
+.gm-global-header .gm-left{display:flex;align-items:center}
+.gm-global-header .gm-brand-text{color:#fff;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+.gm-global-header .gm-right{color:#7C3AED;font-size:11px;font-weight:700}
+
+  /* ── Step controls ───────────────────────────────────── */
+  .step-controls{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;z-index:9998;background:rgba(30,41,59,0.95);padding:10px 24px;border-radius:30px;box-shadow:0 4px 20px rgba(0,0,0,0.3);backdrop-filter:blur(8px);flex-wrap:wrap;justify-content:center}
+  .step-controls button{background:#7C3AED;color:#fff;border:none;padding:8px 24px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s}
+  .step-controls button:hover{background:#6D28D9}
+  #stepCounter{color:rgba(255,255,255,0.7);font-size:13px;font-weight:300;min-width:120px}
+  .step-note{width:100%;text-align:center;color:rgba(255,255,255,0.5);font-size:12px;font-style:italic;line-height:1.3;margin-top:2px}
+
+  /* ── Voice FAB ───────────────────────────────────────── */
+  .voice-fab{position:fixed;bottom:20px;left:20px;z-index:9998;cursor:pointer}
+  .voice-fab-icon{width:48px;height:48px;border-radius:50%;background:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(124,58,237,0.4);transition:transform 0.2s}
+  .voice-fab:hover .voice-fab-icon{transform:scale(1.1)}
+  .voice-fab-tooltip{position:absolute;bottom:56px;left:0;background:#1e293b;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+  .voice-fab.open .voice-fab-tooltip{opacity:1;pointer-events:auto}
+</style>
+</head>
+<body>
+<div class="gm-global-header"><div class="gm-left"><div class="gm-logo-dots"><span></span><span></span><span></span><span></span></div><span class="gm-brand-text">Groovemill</span></div><div class="gm-right">AI-First CRM</div></div>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="app">
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar-left" id="sideLeft">
+    <!-- Company card -->
+    <div class="side-card company-card" id="companyCard">
+      <h3>Kundprofil</h3>
+      <div class="company-name">Vasakronan AB</div>
+      <div class="company-industry">Fastigheter</div>
+      <div class="company-detail">Org.nr: <span>556061-4603</span></div>
+      <div class="company-detail">Huvudkontor: <span>Stockholm</span></div>
+      <div class="company-detail">Anst&auml;llda: <span>~350</span></div>
+      <div class="relationship-badge">Kund sedan 2019</div>
+    </div>
+
+    <!-- Deal history donut -->
+    <div class="side-card" id="donutCard">
+      <h3>Aff&auml;rshistorik</h3>
+      <div class="donut-area">
+        <svg class="donut-svg" width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+          <!-- won: 3/6 -->
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#7C3AED" stroke-width="10"
+            stroke-dasharray="0 188.5" stroke-dashoffset="0"
+            transform="rotate(-90 40 40)" id="donutWon"
+            style="transition: stroke-dasharray 0.8s ease 0.2s"/>
+          <!-- lost: 1/6 -->
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#ef4444" stroke-width="10"
+            stroke-dasharray="0 188.5" stroke-dashoffset="0"
+            transform="rotate(-90 40 40)" id="donutLost"
+            style="transition: stroke-dasharray 0.8s ease 0.5s"/>
+          <!-- active: 2/6 -->
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#7B61FF" stroke-width="10"
+            stroke-dasharray="0 188.5" stroke-dashoffset="0"
+            transform="rotate(-90 40 40)" id="donutActive"
+            style="transition: stroke-dasharray 0.8s ease 0.8s"/>
+          <text x="40" y="37" text-anchor="middle" font-size="14" font-weight="700" fill="#1e293b">6</text>
+          <text x="40" y="49" text-anchor="middle" font-size="8" fill="#64748b">aff&auml;rer</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#7C3AED"></div>3 vunna</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#ef4444"></div>1 f&ouml;rlorad</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#7B61FF"></div>2 p&aring;g&aring;ende</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Relationship Map (appears Phase 5) -->
+    <div class="side-card rel-map-container" id="relMapCard">
+      <h3>Kontaktn&auml;t &mdash; Vasakronan</h3>
+      <svg id="relMapSvg" width="218" height="200" viewBox="0 0 218 200">
+        <!-- Connection lines -->
+        <line id="relLine1" x1="109" y1="95" x2="109" y2="30"
+          stroke="#7C3AED" stroke-width="2.5"
+          stroke-dasharray="65" stroke-dashoffset="65"
+          style="transition: stroke-dashoffset 0.6s ease 0.3s"/>
+        <line id="relLine2" x1="109" y1="95" x2="35" y2="160"
+          stroke="#7C3AED" stroke-width="2.5"
+          stroke-dasharray="95" stroke-dashoffset="95"
+          style="transition: stroke-dashoffset 0.6s ease 0.6s"/>
+        <line id="relLine3" x1="109" y1="95" x2="183" y2="160"
+          stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="4 4"
+          stroke-dashoffset="95" opacity="0.5"
+          style="transition: stroke-dashoffset 0.6s ease 0.9s"/>
+
+        <!-- Center node: GM -->
+        <circle id="relNodeCenter" cx="109" cy="95" r="22" fill="#7C3AED" opacity="0"
+          style="transition: opacity 0.4s ease 0.1s"/>
+        <text id="relTextCenter" x="109" y="99" text-anchor="middle" font-size="10" font-weight="700"
+          fill="#fff" opacity="0" style="transition: opacity 0.3s ease 0.2s">GM</text>
+
+        <!-- Erik node (top, highlighted) -->
+        <circle id="relNodeErik" cx="109" cy="30" r="18" fill="#fff" stroke="#7C3AED" stroke-width="3" opacity="0"
+          style="transition: opacity 0.4s ease 0.4s"/>
+        <text x="109" y="27" text-anchor="middle" font-size="8" font-weight="700" fill="#1e293b"
+          id="relTextErik1" opacity="0" style="transition: opacity 0.3s ease 0.5s">Erik J.</text>
+        <text x="109" y="37" text-anchor="middle" font-size="6.5" fill="#64748b"
+          id="relTextErik2" opacity="0" style="transition: opacity 0.3s ease 0.5s">Fastighetschef</text>
+
+        <!-- Maria node (bottom-left) -->
+        <circle id="relNodeMaria" cx="35" cy="160" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="2" opacity="0"
+          style="transition: opacity 0.4s ease 0.7s"/>
+        <text x="35" y="157" text-anchor="middle" font-size="8" font-weight="600" fill="#1e293b"
+          id="relTextMaria1" opacity="0" style="transition: opacity 0.3s ease 0.8s">Maria S.</text>
+        <text x="35" y="167" text-anchor="middle" font-size="6.5" fill="#64748b"
+          id="relTextMaria2" opacity="0" style="transition: opacity 0.3s ease 0.8s">Ink&ouml;p</text>
+
+        <!-- Johan node (bottom-right) -->
+        <circle id="relNodeJohan" cx="183" cy="160" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="2"
+          stroke-dasharray="3 3" opacity="0"
+          style="transition: opacity 0.4s ease 1s"/>
+        <text x="183" y="157" text-anchor="middle" font-size="8" font-weight="600" fill="#1e293b"
+          id="relTextJohan1" opacity="0" style="transition: opacity 0.3s ease 1.1s">Johan B.</text>
+        <text x="183" y="167" text-anchor="middle" font-size="6.5" fill="#64748b"
+          id="relTextJohan2" opacity="0" style="transition: opacity 0.3s ease 1.1s">Teknik</text>
+
+        <!-- Legend -->
+        <line x1="20" y1="193" x2="40" y2="193" stroke="#7C3AED" stroke-width="2"/>
+        <text x="44" y="196" font-size="7" fill="#64748b">Stark</text>
+        <line x1="90" y1="193" x2="110" y2="193" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.5"/>
+        <text x="114" y="196" font-size="7" fill="#64748b">Svag</text>
+      </svg>
+    </div>
+  </aside>
+
+  <!-- CENTER CHAT -->
+  <main class="chat-center">
+    <div class="chat-header">
+      <div class="avatar">AI</div>
+      <div>
+        <div class="title">CRM-assistent</div>
+        <div class="subtitle">Groovemill</div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages"></div>
+
+    <div class="chat-input-area">
+      <input type="text" placeholder="Skriv ett meddelande..." disabled />
+    </div>
+  </main>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="sidebar-right" id="sideRight">
+    <!-- Deal Score -->
+    <div class="side-card" id="scoreCard">
+      <h3>Deal Score</h3>
+      <div class="score-area">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke-width="8"
+            id="scoreRing"
+            stroke="#f59e0b"
+            stroke-linecap="round"
+            stroke-dasharray="0 251.3"
+            transform="rotate(-90 50 50)"
+            style="transition: stroke-dasharray 1s ease, stroke 0.6s ease"/>
+          <text id="scoreNum" x="50" y="47" text-anchor="middle" font-size="22" font-weight="700" fill="#1e293b">0</text>
+          <text x="50" y="61" text-anchor="middle" font-size="8" fill="#64748b">/100</text>
+        </svg>
+        <div class="score-label" id="scoreLabel">Medium-h&ouml;g</div>
+        <div class="score-change" id="scoreChange">&#9650; +16 po&auml;ng</div>
+      </div>
+    </div>
+
+    <!-- Factors -->
+    <div class="side-card" id="factorsCard">
+      <h3>Faktorer</h3>
+      <div id="factorsList">
+        <div class="factor" id="fKund">
+          <div class="f-label">Kundrelation</div>
+          <div class="f-bar-bg"><div class="f-bar-fill" id="fKundBar"></div></div>
+          <div class="f-pct">80%</div>
+        </div>
+        <div class="factor" id="fSize">
+          <div class="f-label">Dealstorlek</div>
+          <div class="f-bar-bg"><div class="f-bar-fill" id="fSizeBar"></div></div>
+          <div class="f-pct">60%</div>
+        </div>
+        <div class="factor" id="fTime">
+          <div class="f-label">Tidsram</div>
+          <div class="f-bar-bg"><div class="f-bar-fill" id="fTimeBar"></div></div>
+          <div class="f-pct">70%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Similar deals -->
+    <div class="side-card" id="similarCard">
+      <h3>Liknande vunna aff&auml;rer</h3>
+      <div class="similar-deal" id="simDeal1">
+        <div class="sd-name">Teknikavtal Wallenstam</div>
+        <div class="sd-detail">
+          <span>380k</span>
+          <span>45 dagar</span>
+          <span class="sd-won">Vunnen</span>
+        </div>
+      </div>
+      <div class="similar-deal" id="simDeal2">
+        <div class="sd-name">Serviceavtal Castellum</div>
+        <div class="sd-detail">
+          <span>520k</span>
+          <span>62 dagar</span>
+          <span class="sd-won">Vunnen</span>
+        </div>
+      </div>
+      <div class="avg-badge">&#8709; ~53 dagar till avslut</div>
+    </div>
+  </aside>
+</div>
+
+<!-- VOICE FAB -->
+<div class="voice-fab" id="voiceFab" onclick="this.classList.toggle('open')">
+  <div class="voice-fab-icon">&#128222;</div>
+  <div class="voice-fab-tooltip"><strong>Ring CRM-assistenten</strong><br>+46 8 123 45 67<br><span style="font-size:11px;opacity:0.7">Identifiera med BankID</span></div>
+</div>
+
+<!-- STEP CONTROLS -->
+<div class="step-controls">
+  <button id="btnNext" onclick="nextStep()">N&auml;sta &rarr;</button>
+  <span id="stepCounter">Klicka f&ouml;r att b&ouml;rja</span>
+  <div id="stepNote" class="step-note"></div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span class="brand">AI-First CRM &mdash; Mockup Demo</span>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ── Helpers ────────────────────────────────────────── */
+  var $ = function (id) { return document.getElementById(id); };
+  var chat = $("chatMessages");
+
+  /* ── Create message DOM ─────────────────────────────── */
+  function addMsg(type, html) {
+    var div = document.createElement("div");
+    div.className = "msg " + type;
+    div.innerHTML = html;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    void div.offsetWidth;
+    div.classList.add("visible");
+    return div;
+  }
+
+  function addTyping() {
+    var div = document.createElement("div");
+    div.className = "typing";
+    div.id = "typingIndicator";
+    div.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  function removeTyping() {
+    var el = $("typingIndicator");
+    if (el) el.remove();
+  }
+
+  /* ── Progress bar ───────────────────────────────────── */
+  function setProgress(pct) {
+    $("progressBar").style.width = pct + "%";
+  }
+
+  /* ── Donut chart animation ──────────────────────────── */
+  var C = 2 * Math.PI * 30; // ~188.5
+  function animateDonut() {
+    var wonLen = (3 / 6) * C;
+    var lostLen = (1 / 6) * C;
+    var activeLen = (2 / 6) * C;
+
+    $("donutWon").setAttribute("stroke-dasharray", wonLen + " " + (C - wonLen));
+    $("donutLost").setAttribute("stroke-dasharray", lostLen + " " + (C - lostLen));
+    $("donutLost").setAttribute("stroke-dashoffset", String(-wonLen));
+    $("donutActive").setAttribute("stroke-dasharray", activeLen + " " + (C - activeLen));
+    $("donutActive").setAttribute("stroke-dashoffset", String(-(wonLen + lostLen)));
+  }
+
+  /* ── Score ring ─────────────────────────────────────── */
+  var RING_C = 2 * Math.PI * 40; // ~251.3
+  var currentScore = 0;
+
+  function animateScore(target, color) {
+    var dashLen = (target / 100) * RING_C;
+    $("scoreRing").setAttribute("stroke-dasharray", dashLen + " " + (RING_C - dashLen));
+    $("scoreRing").setAttribute("stroke", color);
+
+    var start = currentScore;
+    var dur = 900;
+    var t0 = performance.now();
+    function tick(now) {
+      var p = Math.min((now - t0) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      var v = Math.round(start + (target - start) * eased);
+      $("scoreNum").textContent = String(v);
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+    currentScore = target;
+  }
+
+  /* ── Factor bars ────────────────────────────────────── */
+  function showFactor(id, barId, widthPct) {
+    var el = $(id);
+    el.classList.add("visible");
+    setTimeout(function () { $(barId).style.width = widthPct + "%"; }, 100);
+  }
+
+  /* ── Relationship map ───────────────────────────────── */
+  function animateRelMap() {
+    $("relMapCard").classList.add("visible");
+
+    $("relNodeCenter").setAttribute("opacity", "1");
+    $("relTextCenter").setAttribute("opacity", "1");
+
+    $("relLine1").style.strokeDashoffset = "0";
+    $("relLine2").style.strokeDashoffset = "0";
+    $("relLine3").style.strokeDashoffset = "0";
+
+    $("relNodeErik").setAttribute("opacity", "1");
+    $("relTextErik1").setAttribute("opacity", "1");
+    $("relTextErik2").setAttribute("opacity", "1");
+
+    $("relNodeMaria").setAttribute("opacity", "1");
+    $("relTextMaria1").setAttribute("opacity", "1");
+    $("relTextMaria2").setAttribute("opacity", "1");
+
+    $("relNodeJohan").setAttribute("opacity", "1");
+    $("relTextJohan1").setAttribute("opacity", "1");
+    $("relTextJohan2").setAttribute("opacity", "1");
+  }
+
+  /* ── Reset everything ───────────────────────────────── */
+  function resetAll() {
+    chat.innerHTML = "";
+    currentScore = 0;
+
+    $("sideLeft").classList.remove("visible");
+    $("sideRight").classList.remove("visible");
+
+    $("scoreRing").setAttribute("stroke-dasharray", "0 251.3");
+    $("scoreRing").setAttribute("stroke", "#f59e0b");
+    $("scoreNum").textContent = "0";
+    $("scoreLabel").textContent = "Medium-h\u00f6g";
+    $("scoreChange").classList.remove("visible");
+
+    document.querySelectorAll(".factor").forEach(function (f) { f.classList.remove("visible"); });
+    $("fKundBar").style.width = "0";
+    $("fSizeBar").style.width = "0";
+    $("fTimeBar").style.width = "0";
+    document.querySelectorAll(".factor-extra").forEach(function (e) { e.remove(); });
+
+    $("simDeal1").classList.remove("visible");
+    $("simDeal2").classList.remove("visible");
+
+    $("donutWon").setAttribute("stroke-dasharray", "0 188.5");
+    $("donutLost").setAttribute("stroke-dasharray", "0 188.5");
+    $("donutActive").setAttribute("stroke-dasharray", "0 188.5");
+    $("donutLost").setAttribute("stroke-dashoffset", "0");
+    $("donutActive").setAttribute("stroke-dashoffset", "0");
+
+    $("relMapCard").classList.remove("visible");
+    var relIds = ["relNodeCenter","relTextCenter","relNodeErik","relTextErik1","relTextErik2",
+     "relNodeMaria","relTextMaria1","relTextMaria2","relNodeJohan","relTextJohan1","relTextJohan2"];
+    relIds.forEach(function (id) { $(id).setAttribute("opacity", "0"); });
+    $("relLine1").style.strokeDashoffset = "65";
+    $("relLine2").style.strokeDashoffset = "95";
+    $("relLine3").style.strokeDashoffset = "95";
+
+    setProgress(0);
+  }
+
+  /* ── Deal card HTML ─────────────────────────────────── */
+  var dealCardHTML =
+    '<div class="deal-card" id="dealCard1">' +
+      '<div class="row"><span class="label">F\u00f6retag</span><span class="value">Vasakronan AB</span></div>' +
+      '<div class="row"><span class="label">Kontakt</span><span class="value">Erik Johansson</span></div>' +
+      '<div class="row"><span class="label">Aff\u00e4r</span><span class="value">Serviceavtal</span></div>' +
+      '<div class="row"><span class="label">V\u00e4rde</span><span class="value">450 000 kr</span></div>' +
+      '<div class="row"><span class="label">Fas</span><span class="value">Ny</span></div>' +
+      '<div class="actions">' +
+        '<button class="btn btn-primary" id="btnCreate1">Skapa aff\u00e4r</button>' +
+        '<button class="btn btn-secondary" id="btnEdit1">\u00c4ndra</button>' +
+      '</div>' +
+    '</div>';
+
+  var dealCardUpdatedHTML =
+    '<div class="deal-card" id="dealCard1Updated">' +
+      '<div class="row"><span class="label">F\u00f6retag</span><span class="value">Vasakronan AB</span></div>' +
+      '<div class="row"><span class="label">Kontakt</span><span class="value">Erik Johansson</span></div>' +
+      '<div class="row"><span class="label">Aff\u00e4r</span><span class="value">Serviceavtal</span></div>' +
+      '<div class="row modified"><span class="label">V\u00e4rde</span><span class="value">500 000 kr</span></div>' +
+      '<div class="row"><span class="label">Fas</span><span class="value">Ny</span></div>' +
+      '<div class="row modified"><span class="label">St\u00e4ngdatum</span><span class="value">2026-08-31</span></div>' +
+      '<div class="fields-updated">2 f\u00e4lt uppdaterade</div>' +
+      '<div class="actions">' +
+        '<button class="btn btn-primary" id="btnCreate1Updated">Skapa aff\u00e4r</button>' +
+        '<button class="btn btn-secondary">\u00c4ndra</button>' +
+      '</div>' +
+    '</div>';
+
+  var funnelHTML =
+    '<div class="funnel-viz" id="funnelViz">' +
+      '<div class="funnel-stages">' +
+        '<div class="funnel-stage-item"><div class="funnel-bar active">Ny</div></div>' +
+        '<div class="funnel-stage-item"><div class="funnel-bar">Offert</div></div>' +
+        '<div class="funnel-stage-item"><div class="funnel-bar">F\u00f6rhandling</div></div>' +
+        '<div class="funnel-stage-item"><div class="funnel-bar">Vunnen</div></div>' +
+      '</div>' +
+      '<div class="next-step">' +
+        '<div class="ns-label">N\u00e4sta rekommenderade steg</div>' +
+        '<div class="ns-text">Boka ett platsbes\u00f6k hos Vasakronan inom 2 veckor</div>' +
+        '<div class="ns-date">' +
+          '<div class="cal-icon">16<span class="cal-month">MAR</span></div>' +
+          '<span>F\u00f6reslagen uppf\u00f6ljning: 16 mars 2026</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  /* ── Step-based demo system ─────────────────────────── */
+  var steps = [
+    // Step 1: Welcome message
+    function () {
+      setProgress(5);
+      addMsg("agent", "Hej! Jag \u00e4r din CRM-assistent. Vad kan jag hj\u00e4lpa dig med idag?");
+    },
+
+    // Step 2: User types deal request
+    function () {
+      setProgress(12);
+      addMsg("user",
+        "Skapa en aff\u00e4r f\u00f6r nytt serviceavtal med Vasakronan, kontakt Erik, 450k");
+    },
+
+    // Step 3: Left sidebar slides in + donut animates
+    function () {
+      setProgress(20);
+      $("sideLeft").classList.add("visible");
+      setTimeout(function () { animateDonut(); }, 300);
+    },
+
+    // Step 4: Agent responds with deal card + right sidebar + score + factors + similar deals
+    function () {
+      setProgress(35);
+      removeTyping();
+      addMsg("agent",
+        "Jag hittar <strong>Vasakronan AB</strong> i CRM:et och skapar aff\u00e4ren:" +
+        dealCardHTML);
+
+      setTimeout(function () {
+        $("sideRight").classList.add("visible");
+      }, 300);
+      setTimeout(function () {
+        animateScore(72, "#f59e0b");
+      }, 700);
+      setTimeout(function () {
+        showFactor("fKund", "fKundBar", 80);
+      }, 1000);
+      setTimeout(function () {
+        showFactor("fSize", "fSizeBar", 60);
+      }, 1200);
+      setTimeout(function () {
+        showFactor("fTime", "fTimeBar", 70);
+      }, 1400);
+      setTimeout(function () {
+        $("simDeal1").classList.add("visible");
+      }, 1600);
+      setTimeout(function () {
+        $("simDeal2").classList.add("visible");
+      }, 1800);
+    },
+
+    // Step 5: User clicks "Andra" button
+    function () {
+      setProgress(48);
+      var btnEdit = document.getElementById("btnEdit1");
+      if (btnEdit) {
+        btnEdit.classList.add("clicked");
+      }
+    },
+
+    // Step 6: User types modification request
+    function () {
+      setProgress(55);
+      addMsg("user",
+        "\u00c4ndra v\u00e4rdet till 500k och st\u00e4ngdatum till augusti");
+    },
+
+    // Step 7: Agent shows updated card + score/factor update
+    function () {
+      setProgress(62);
+      removeTyping();
+      addMsg("agent",
+        "Uppdaterat:" +
+        dealCardUpdatedHTML);
+
+      setTimeout(function () {
+        animateScore(76, "#f59e0b");
+      }, 400);
+      setTimeout(function () {
+        $("fSizeBar").style.width = "0";
+      }, 600);
+      setTimeout(function () {
+        showFactor("fSize", "fSizeBar", 68);
+      }, 800);
+    },
+
+    // Step 8: User confirms — clicks "Skapa affar" on updated card + success
+    function () {
+      setProgress(75);
+      var btnCreateUpdated = document.getElementById("btnCreate1Updated");
+      if (btnCreateUpdated) {
+        btnCreateUpdated.classList.add("clicked");
+        btnCreateUpdated.textContent = "\u2713 Skapad!";
+      }
+      setTimeout(function () {
+        var dcUpdated = document.getElementById("dealCard1Updated");
+        if (dcUpdated) dcUpdated.classList.add("success");
+      }, 400);
+    },
+
+    // Step 9: Agent shows funnel + pipeline + score goes high
+    function () {
+      setProgress(82);
+      removeTyping();
+      addMsg("agent",
+        "Aff\u00e4ren \u00e4r skapad med uppdaterade v\u00e4rden! H\u00e4r ser du pipeline-positionen:" +
+        funnelHTML);
+
+      setTimeout(function () {
+        var fv = document.getElementById("funnelViz");
+        if (fv) fv.classList.add("visible");
+      }, 250);
+      setTimeout(function () {
+        animateScore(88, "#22c55e");
+        $("scoreLabel").textContent = "H\u00f6g";
+      }, 600);
+      setTimeout(function () {
+        $("scoreChange").classList.add("visible");
+      }, 1000);
+    },
+
+    // Step 10: User asks to add contact
+    function () {
+      setProgress(88);
+      addMsg("user",
+        "L\u00e4gg till Erik Johansson som kontakt p\u00e5 Vasakronan, fastighetschef");
+    },
+
+    // Step 11: Agent responds + relationship map animates
+    function () {
+      setProgress(100);
+      removeTyping();
+      addMsg("agent",
+        "Kontakten <strong>Erik Johansson</strong> \u00e4r tillagd p\u00e5 Vasakronan AB. " +
+        "H\u00e4r \u00e4r ert kontaktn\u00e4t:");
+
+      setTimeout(function () {
+        animateRelMap();
+      }, 400);
+    }
+  ];
+
+  var currentStep = -1;
+
+  var stepNotes = [
+    "AI-assistenten v\u00e4lkomnar anv\u00e4ndaren",
+    "En mening skapar en komplett aff\u00e4r \u2014 AI:n tolkar alla f\u00e4lt",
+    "Kundprofil med historik och donutdiagram visas automatiskt",
+    "Aff\u00e4rspo\u00e4ng, liknande vunna aff\u00e4rer och riskbed\u00f6mning",
+    "Anv\u00e4ndaren vill \u00e4ndra \u2014 klickar '\u00c4ndra' ist\u00e4llet f\u00f6r att bekr\u00e4fta",
+    "Korrigering via naturligt spr\u00e5k: '\u00c4ndra v\u00e4rdet till 500k'",
+    "Uppdaterat kort med markerade \u00e4ndringar \u2014 po\u00e4ngen justeras",
+    "Nu bekr\u00e4ftas aff\u00e4ren \u2014 skapas direkt i SharePoint",
+    "Pipeline-vy och AI:s rekommenderade n\u00e4sta steg",
+    "Kontaktperson l\u00e4ggs till med en mening",
+    "Relationskarta visar hela kontaktn\u00e4tet hos kunden"
+  ];
+
+  function resetDemo() {
+    currentStep = -1;
+    resetAll();
+    $("stepCounter").textContent = "Klicka f\u00f6r att b\u00f6rja";
+    $("btnNext").textContent = "N\u00e4sta \u2192";
+    document.getElementById('stepNote').textContent = '';
+  }
+
+  window.nextStep = function () {
+    // If at end, reset
+    if (currentStep >= steps.length - 1) {
+      resetDemo();
+      return;
+    }
+    currentStep++;
+    steps[currentStep]();
+    $("stepCounter").textContent = "Steg " + (currentStep + 1) + " / " + steps.length;
+    $("btnNext").textContent = currentStep >= steps.length - 1 ? "\u21BA B\u00f6rja om" : "N\u00e4sta \u2192";
+    document.getElementById('stepNote').textContent = stepNotes[currentStep] || '';
+  };
+
+  /* ── Keyboard shortcuts ─────────────────────────────── */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight" || e.key === " ") {
+      e.preventDefault();
+      window.nextStep();
+    } else if (e.key === "r" || e.key === "R") {
+      resetDemo();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

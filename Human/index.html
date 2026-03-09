@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-First CRM — Groovemill</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: #f4f6f8; color: #1e293b; min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    padding: 24px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .gm-logo { display: flex; gap: 5px; background: #0F172A; padding: 5px 8px; border-radius: 3px; }
+  .gm-logo span { width: 10px; height: 10px; border-radius: 50%; }
+  .gm-logo span:nth-child(1) { background: #7C3AED; }
+  .gm-logo span:nth-child(2) { background: #6366F1; }
+  .gm-logo span:nth-child(3) { background: #3B82F6; }
+  .gm-logo span:nth-child(4) { background: #06B6D4; }
+  .header-brand { font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #1e293b; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .header-doc-link {
+    color: #64748b; font-size: 13px; text-decoration: none;
+    transition: color 0.2s;
+  }
+  .header-doc-link:hover { color: #7C3AED; }
+
+  /* ===== HERO ===== */
+  .hero {
+    text-align: center; padding: 60px 40px 40px;
+  }
+  .hero-badge {
+    display: inline-block; background: rgba(124,58,237,0.15); color: #7C3AED;
+    padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 48px; font-weight: 800; line-height: 1.1;
+    background: linear-gradient(135deg, #1e293b 0%, #7C3AED 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    font-size: 18px; color: #64748b; font-weight: 300;
+    margin-top: 12px; max-width: 600px; margin-left: auto; margin-right: auto;
+  }
+  .hero-actions { margin-top: 28px; display: flex; gap: 12px; justify-content: center; }
+  .btn-tour {
+    background: #7C3AED; color: #fff; border: none; padding: 12px 32px;
+    border-radius: 24px; font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-tour:hover { background: #6D28D9; transform: translateY(-1px); }
+  .btn-doc {
+    background: transparent; color: #64748b; border: 1px solid #e2e8f0;
+    padding: 12px 28px; border-radius: 24px; font-size: 15px; font-weight: 500;
+    cursor: pointer; text-decoration: none; transition: all 0.2s;
+  }
+  .btn-doc:hover { border-color: #7C3AED; color: #7C3AED; background: rgba(124,58,237,0.08); }
+
+  /* ===== GRID ===== */
+  .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    padding: 0 40px 60px; max-width: 1200px; margin: 0 auto; width: 100%;
+  }
+  .tile {
+    background: #ffffff; border-radius: 12px; overflow: hidden;
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer; text-decoration: none; color: #fff;
+    display: flex; flex-direction: column;
+  }
+  .tile:hover {
+    transform: translateY(-4px);
+    border-color: rgba(124,58,237,0.3);
+    box-shadow: 0 12px 40px rgba(124,58,237,0.1);
+  }
+  .tile-img {
+    width: 100%; height: 200px; object-fit: cover; object-position: top;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .tile-body { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; }
+  .tile-number {
+    font-size: 11px; font-weight: 700; color: #7C3AED;
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .tile-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .tile-desc { font-size: 13px; color: #64748b; line-height: 1.5; flex: 1; }
+  .tile-tags { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .tile-tag {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .tag-chat { background: rgba(124,58,237,0.15); color: #7C3AED; }
+  .tag-voice { background: rgba(123,97,255,0.15); color: #7B61FF; }
+  .tag-mobile { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .tag-field { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .tag-analytics { background: rgba(16,185,129,0.15); color: #10b981; }
+  .tag-auth { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+  /* ===== TOUR OVERLAY ===== */
+  .tour-overlay {
+    display: none; position: fixed; inset: 0; z-index: 10000;
+    background: rgba(15,23,42,0.95); backdrop-filter: blur(8px);
+    flex-direction: column; align-items: center; justify-content: center;
+  }
+  .tour-overlay.active { display: flex; }
+  .tour-step-label {
+    font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .tour-title { font-size: 32px; font-weight: 800; margin-bottom: 8px; text-align: center; }
+  .tour-desc {
+    font-size: 16px; color: rgba(255,255,255,0.5); font-weight: 300;
+    max-width: 500px; text-align: center; margin-bottom: 32px;
+  }
+  .tour-btn {
+    background: #7C3AED; color: #fff; border: none; padding: 14px 40px;
+    border-radius: 24px; font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .tour-btn:hover { background: #6D28D9; }
+  .tour-close {
+    position: absolute; top: 20px; right: 24px;
+    background: none; border: none; color: rgba(255,255,255,0.4);
+    font-size: 28px; cursor: pointer; transition: color 0.2s;
+  }
+  .tour-close:hover { color: #fff; }
+  .tour-progress {
+    display: flex; gap: 8px; margin-top: 24px;
+  }
+  .tour-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); transition: background 0.3s;
+  }
+  .tour-dot.active { background: #7C3AED; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    padding: 20px 40px; border-top: 1px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: auto;
+  }
+  .footer-left { display: flex; align-items: center; gap: 12px; }
+  .footer-boostly { font-size: 11px; color: #94a3b8; font-weight: 300; }
+  .footer-right { font-size: 11px; color: #94a3b8; }
+
+  /* ===== VOICE FAB ===== */
+  .voice-fab { position: fixed; bottom: 24px; left: 24px; z-index: 9998; cursor: pointer; }
+  .voice-fab-icon {
+    width: 52px; height: 52px; border-radius: 50%; background: #7C3AED;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+    transition: transform 0.2s;
+  }
+  .voice-fab:hover .voice-fab-icon { transform: scale(1.1); }
+  .voice-fab-tooltip {
+    position: absolute; bottom: 62px; left: 0;
+    background: #fff; color: #1e293b; padding: 12px 16px;
+    border-radius: 10px; font-size: 13px; line-height: 1.6;
+    white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border: 1px solid #e2e8f0;
+  }
+  .voice-fab.open .voice-fab-tooltip { opacity: 1; pointer-events: auto; }
+
+  @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; padding: 0 20px 40px; }
+    .hero h1 { font-size: 32px; }
+    .header { padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="gm-logo"><span></span><span></span><span></span><span></span></div>
+    <div class="header-brand">Groovemill</div>
+  </div>
+  <div class="header-right">
+    <a class="header-doc-link" href="AI-First-CRM-Koncept.html">Konceptdokument (PDF)</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Konceptpresentation</div>
+  <h1>AI-First CRM</h1>
+  <p>Kundhantering med AI i centrum. Chatt, mobil och r&ouml;st &mdash; en agent, alla kanaler.</p>
+  <div class="hero-actions">
+    <button class="btn-tour" onclick="startTour()">Guidad tur</button>
+    <a class="btn-doc" href="AI-First-CRM-Koncept.html">L&auml;s konceptet</a>
+  </div>
+</div>
+
+<!-- DEMO GRID -->
+<div class="grid">
+
+  <a class="tile" href="mockups/01-voice-transcript.html" id="tile1">
+    <img class="tile-img" src="screenshots/01-smart-followup.png" alt="">
+    <div class="tile-body">
+      <div class="tile-number">Demo 1</div>
+      <div class="tile-title">Smart uppf&ouml;ljning</div>
+      <div class="tile-desc">AI:n st&auml;ller intelligenta fr&aring;gor efter ett kundm&ouml;te och bygger insikter i realtid</div>
+      <div class="tile-tags">
+        <span class="tile-tag tag-chat">Chatt</span>
+        <span class="tile-tag tag-analytics">Insikter</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="tile" href="mockups/02-chat-to-action.html" id="tile2">
+    <img class="tile-img" src="screenshots/02-deal-creation.png" alt="">
+    <div class="tile-body">
+      <div class="tile-number">Demo 2</div>
+      <div class="tile-title">Aff&auml;r via chatt</div>
+      <div class="tile-desc">En mening skapar en aff&auml;r med full kontext &mdash; kundhistorik, po&auml;ng, kontaktn&auml;t</div>
+      <div class="tile-tags">
+        <span class="tile-tag tag-chat">Chatt</span>
+        <span class="tile-tag tag-analytics">Scoring</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="tile" href="mockups/03-pipeline-drilldown.html" id="tile3">
+    <img class="tile-img" src="screenshots/03-analytics-trends.png" alt="">
+    <div class="tile-body">
+      <div class="tile-number">Demo 3</div>
+      <div class="tile-title">Pipeline-analys</div>
+      <div class="tile-desc">Helsk&auml;rmsdashboard med tratt, trender och AI-insikter &mdash; drivet av konversation</div>
+      <div class="tile-tags">
+        <span class="tile-tag tag-analytics">Analytics</span>
+        <span class="tile-tag tag-chat">Chatt</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="tile" href="mockups/04-mobile-notifications.html" id="tile4">
+    <img class="tile-img" src="screenshots/04-mobile-dash.png" alt="">
+    <div class="tile-body">
+      <div class="tile-number">Demo 4</div>
+      <div class="tile-title">Mobil dashboard</div>
+      <div class="tile-desc">Pipeline-donut, KPI:er, heatmap och AI-assistent &mdash; allt i fickan</div>
+      <div class="tile-tags">
+        <span class="tile-tag tag-mobile">Mobil</span>
+        <span class="tile-tag tag-analytics">Dashboard</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="tile" href="mockups/05-bankid-auth.html" id="tile5">
+    <img class="tile-img" src="screenshots/05-bankid.png" alt="">
+    <div class="tile-body">
+      <div class="tile-number">Demo 5</div>
+      <div class="tile-title">R&ouml;st + BankID</div>
+      <div class="tile-desc">Ring, verifiera med BankID, f&aring; pipeline-data uppläst &mdash; helt handsfree</div>
+      <div class="tile-tags">
+        <span class="tile-tag tag-voice">R&ouml;st</span>
+        <span class="tile-tag tag-auth">BankID</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="tile" href="mockups/06-ovk-inspection.html" id="tile6">
+    <img class="tile-img" src="screenshots/06-ovk-inspection.png" alt="">
+    <div class="tile-body">
+      <div class="tile-number">Demo 6</div>
+      <div class="tile-title">F&auml;ltbesiktning</div>
+      <div class="tile-desc">Tekniker p&aring; plats: checklista, anm&auml;rkningar, AI-protokoll och automatisk aff&auml;rsm&ouml;jlighet</div>
+      <div class="tile-tags">
+        <span class="tile-tag tag-field">F&auml;ltarbete</span>
+        <span class="tile-tag tag-analytics">Inspektion</span>
+      </div>
+    </div>
+  </a>
+
+</div>
+
+<!-- VOICE FAB -->
+<div class="voice-fab" onclick="this.classList.toggle('open')">
+  <div class="voice-fab-icon">&#128222;</div>
+  <div class="voice-fab-tooltip">
+    <strong>Ring CRM-assistenten</strong><br>
+    +46 8 123 45 67<br>
+    <span style="font-size:11px;opacity:0.7">Identifiera med BankID</span>
+  </div>
+</div>
+
+<!-- GUIDED TOUR OVERLAY -->
+<div class="tour-overlay" id="tourOverlay">
+  <button class="tour-close" onclick="closeTour()">&times;</button>
+  <div class="tour-step-label" id="tourStepLabel">Steg 1 av 6</div>
+  <div class="tour-title" id="tourTitle"></div>
+  <div class="tour-desc" id="tourDesc"></div>
+  <button class="tour-btn" id="tourBtn" onclick="tourNext()">Visa demo</button>
+  <div class="tour-progress" id="tourProgress"></div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-left">
+    <div class="gm-logo" style="padding:3px 5px"><span style="width:6px;height:6px"></span><span style="width:6px;height:6px"></span><span style="width:6px;height:6px"></span><span style="width:6px;height:6px"></span></div>
+    <span class="footer-boostly">Boostly AB &mdash; Digital Workplace</span>
+  </div>
+  <div class="footer-right">AI-First CRM &mdash; Konceptpresentation &mdash; Mars 2026</div>
+</div>
+
+<script>
+// Guided tour — "A day in the life of Anna"
+const tourSteps = [
+  {
+    tile: 'tile4', title: 'Morgon: Mobil dashboard',
+    desc: 'Anna \u00f6ppnar appen p\u00e5 v\u00e4g till jobbet. Pipeline-donut, KPI:er och AI-assistenten visar vad som beh\u00f6ver uppm\u00e4rksamhet idag.',
+    url: 'mockups/04-mobile-notifications.html'
+  },
+  {
+    tile: 'tile2', title: 'F\u00f6rmiddag: Ny aff\u00e4r via chatt',
+    desc: 'Anna skapar en aff\u00e4r med en mening i Teams. AI:n visar kundhistorik, po\u00e4ngs\u00e4tter aff\u00e4ren och kopplar kontakter automatiskt.',
+    url: 'mockups/02-chat-to-action.html'
+  },
+  {
+    tile: 'tile6', title: 'Lunch: F\u00e4ltbesiktning p\u00e5 plats',
+    desc: 'Teknikern utf\u00f6r en besiktning. AI:n hj\u00e4lper med checklistan, skapar arbetsordrar och uppt\u00e4cker en uppgraderingsm\u00f6jlighet v\u00e4rd 380k.',
+    url: 'mockups/06-ovk-inspection.html'
+  },
+  {
+    tile: 'tile5', title: 'Eftermiddag: R\u00f6stsamtal fr\u00e5n bilen',
+    desc: 'Anna ringer CRM-assistenten, identifierar sig med BankID och f\u00e5r pipeline-data uppläst medan hon k\u00f6r.',
+    url: 'mockups/05-bankid-auth.html'
+  },
+  {
+    tile: 'tile1', title: 'Kundm\u00f6te: Smart uppf\u00f6ljning',
+    desc: 'Efter m\u00f6tet loggar Anna samtalet. AI:n fr\u00e5gar om k\u00f6psignaler, problem och konkurrenter \u2014 och bygger en komplett insiktspanel.',
+    url: 'mockups/01-voice-transcript.html'
+  },
+  {
+    tile: 'tile3', title: 'Kv\u00e4ll: Pipeline-analys',
+    desc: 'Anna fr\u00e5gar \u201dVisa min pipeline\u201d och f\u00e5r en helsk\u00e4rmsdashboard med tratt, trender, s\u00e4ljartavla och AI-insikter.',
+    url: 'mockups/03-pipeline-drilldown.html'
+  }
+];
+
+let tourStep = 0;
+
+function startTour() {
+  tourStep = 0;
+  showTourStep();
+  document.getElementById('tourOverlay').classList.add('active');
+}
+
+function closeTour() {
+  document.getElementById('tourOverlay').classList.remove('active');
+}
+
+function showTourStep() {
+  const s = tourSteps[tourStep];
+  document.getElementById('tourStepLabel').textContent = `Steg ${tourStep + 1} av ${tourSteps.length}`;
+  document.getElementById('tourTitle').textContent = s.title;
+  document.getElementById('tourDesc').textContent = s.desc;
+  document.getElementById('tourBtn').textContent = tourStep < tourSteps.length - 1 ? 'Visa demo \u2192' : 'Visa sista demo \u2192';
+
+  // Build progress dots
+  const prog = document.getElementById('tourProgress');
+  prog.innerHTML = '';
+  for (let i = 0; i < tourSteps.length; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'tour-dot' + (i === tourStep ? ' active' : '');
+    prog.appendChild(dot);
+  }
+
+  // Highlight the corresponding tile
+  document.querySelectorAll('.tile').forEach(t => t.style.outline = 'none');
+  const tile = document.getElementById(s.tile);
+  if (tile) {
+    tile.style.outline = '2px solid #7C3AED';
+    tile.style.outlineOffset = '4px';
+  }
+}
+
+function tourNext() {
+  const s = tourSteps[tourStep];
+  // Open the demo in a new tab
+  window.open(s.url, '_blank');
+
+  tourStep++;
+  if (tourStep < tourSteps.length) {
+    showTourStep();
+  } else {
+    closeTour();
+    document.querySelectorAll('.tile').forEach(t => t.style.outline = 'none');
+  }
+}
+
+// Keyboard: Escape closes tour
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeTour();
+});
+</script>
+
+</body>
+</html>
